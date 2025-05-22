@@ -1,90 +1,231 @@
-<script setup>
-import Checkbox from '@/Components/Checkbox.vue';
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+<template>
+  <div class="tela">
+    <div class="caixa">
+      <!-- Lado esquerdo (imagem) -->
+      <div class="lado-esquerdo">
+        <img src="/images/CorujaSEMFUNDO.png" alt="Coruja" class="coruja" />
+      </div>
 
-defineProps({
-    canResetPassword: Boolean,
-    status: String,
-});
+      <!-- Lado direito (formulário) -->
+      <div class="lado-direito">
+        <h2 class="titulo">Login</h2>
+        <form @submit.prevent="login">
+          <div class="campo">
+            <label class="label">E-mail</label>
+            <div class="input-box">
+              <span class="icone">📧</span>
+              <input
+                type="email"
+                v-model="form.email"
+                placeholder="E-mail"
+                class="input"
+              />
+            </div>
+          </div>
 
-const form = useForm({
-    email: '',
-    password: '',
-    remember: false,
-});
+          <div class="campo">
+            <label class="label">Senha</label>
+            <div class="input-box">
+              <span class="icone">🔒</span>
+              <input
+                type="password"
+                v-model="form.password"
+                placeholder="Senha"
+                class="input"
+              />
+            </div>
+          </div>
 
-const submit = () => {
-    form.post(route('login'), {
-        onFinish: () => form.reset('password'),
-    });
+          <div class="esqueci">
+            <a href="#" class="link">Esqueceu sua senha?</a>
+          </div>
+
+          <button type="submit" class="botao">Entrar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <Preloading :show="loading" />
+</template>
+
+<script>
+import { toast } from 'vue3-toastify';
+import Preloading from '@/Components/Utils/Preloading.vue';
+
+export default {
+  components: {
+    Preloading,
+  },
+  data() {
+    return {
+      form: {
+        email: '',
+        password: '',
+      },
+      errors: [],
+      loading: false,
+    };
+  },
+  methods: {
+    login() {
+      this.loading = true;
+      this.$inertia.post('/login', this.form, {
+        onSuccess: () => {
+          toast.success('Login bem-sucedido!', {
+            position: 'top-center',
+            duration: 3000,
+          });
+          // Redirecionamento pode ser definido aqui ou no controller
+        },
+        onError: (errors) => {
+          const errorMessage =
+            errors.message || 'Ocorreu um erro ao fazer login.';
+          toast.error(errorMessage, {
+            position: 'top-center',
+            duration: 3000,
+          });
+          this.errors = errors;
+        },
+        onFinish: () => {
+          this.loading = false;
+        },
+      });
+    },
+  },
 };
 </script>
 
-<template>
-    <GuestLayout>
-        <Head title="Log in" />
+<style scoped>
+/* Seus estilos permanecem os mesmos */
+.tela {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #ffffff;
+}
 
-        <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
-            {{ status }}
-        </div>
+.caixa {
+  display: flex;
+  background: white;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  max-width: 900px;
+  width: 90%;
+}
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
+.lado-esquerdo {
+  background: #fff5d1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 20px;
+}
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
+.coruja {
+  width: 100%;
+  max-width: 100%;
+}
 
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
+.lado-direito {
+  flex: 1;
+  padding: 40px;
+}
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+.titulo {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
 
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                />
+.campo {
+  margin-bottom: 15px;
+}
 
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
+.label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
 
-            <div class="block mt-4">
-                <label class="flex items-center">
-                    <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ml-2 text-sm text-gray-600">Remember me</span>
-                </label>
-            </div>
+.input-box {
+  position: relative;
+}
 
-            <div class="flex items-center justify-end mt-4">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                    Forgot your password?
-                </Link>
+.icone {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #777;
+}
 
-                <PrimaryButton class="ml-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Log in
-                </PrimaryButton>
-            </div>
-        </form>
-    </GuestLayout>
-</template>
+.input {
+  width: 100%;
+  padding: 10px 10px 10px 35px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+.esqueci {
+  text-align: right;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.link {
+  color: #333;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.botao {
+  width: 50%;
+  background: #135572;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  display: block;
+  margin: 20px auto 0;
+}
+
+.botao:hover {
+  background: #53bbe9;
+}
+
+@media (max-width: 768px) {
+  .caixa {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .lado-esquerdo {
+    order: -1;
+    padding: 30px;
+  }
+
+  .coruja {
+    max-width: 200px;
+  }
+
+  .lado-direito {
+    padding: 20px;
+  }
+}
+</style>
