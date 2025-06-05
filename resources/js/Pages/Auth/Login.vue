@@ -3,7 +3,7 @@
     <div class="caixa">
       <!-- Lado esquerdo (imagem) -->
       <div class="lado-esquerdo">
-        <img src="/images/CorujaSEMFUNDO.png" alt="Coruja" class="coruja" />
+        <img src="/images/imgLogin.png" alt="Login" class="Login" />
       </div>
 
       <!-- Lado direito (formulário) -->
@@ -11,7 +11,6 @@
         <h2 class="titulo">Login</h2>
         <form @submit.prevent="login">
           <div class="campo">
-            <label class="label">E-mail</label>
             <div class="input-box">
               <span class="icone">📧</span>
               <input
@@ -24,7 +23,6 @@
           </div>
 
           <div class="campo">
-            <label class="label">Senha</label>
             <div class="input-box">
               <span class="icone">🔒</span>
               <input
@@ -45,16 +43,13 @@
       </div>
     </div>
   </div>
-  <Preloading :show="loading" />
 </template>
 
 <script>
-import { toast } from 'vue3-toastify';
-import Preloading from '@/Components/Utils/Preloading.vue';
 
 export default {
   components: {
-    Preloading,
+   
   },
   data() {
     return {
@@ -96,19 +91,19 @@ export default {
 </script>
 
 <style scoped>
-/* Seus estilos permanecem os mesmos */
 .tela {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #ffffff;
+  background-image: url('/images/BackgroundLogin.png'); 
+  background-size: cover;
 }
 
 .caixa {
   display: flex;
   background: white;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 4px 10px rgba(135, 135, 135, 0.2);
   border-radius: 10px;
   overflow: hidden;
   max-width: 900px;
@@ -116,7 +111,7 @@ export default {
 }
 
 .lado-esquerdo {
-  background: #fff5d1;
+  background: #002F66;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,9 +119,11 @@ export default {
   padding: 20px;
 }
 
-.coruja {
+.Login {
   width: 100%;
-  max-width: 100%;
+  max-width: none;
+  height: auto;
+  display: block;
 }
 
 .lado-direito {
@@ -143,13 +140,7 @@ export default {
 
 .campo {
   margin-bottom: 15px;
-}
-
-.label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #333;
+  margin-top: 40px;
 }
 
 .input-box {
@@ -173,7 +164,7 @@ export default {
 }
 
 .input:focus {
-  border-color: #007bff;
+  border-color: #ffffff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
 }
 
@@ -194,8 +185,8 @@ export default {
 
 .botao {
   width: 50%;
-  background: #135572;
-  color: white;
+  background: #B0D5FF;
+  color: #333;
   padding: 12px;
   border: none;
   border-radius: 5px;
