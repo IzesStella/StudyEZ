@@ -16,11 +16,16 @@ class Community extends Model
 
     public function users()
     {
-    return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class);
     }
 
     public function posts()
-{
-    return $this->hasMany(Post::class);
-}
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

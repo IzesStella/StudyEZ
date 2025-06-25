@@ -15,9 +15,10 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('email');
+            $table->string('name');
+            $table->string('email')->unique();
             $table->string('password');
-            $table->enum('role', ['monitorado', 'monitorando'])->default('monitorado');
+            $table->boolean('role')->default(true);
             $table->timestamps();
         });
     }
