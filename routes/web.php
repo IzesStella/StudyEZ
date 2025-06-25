@@ -9,7 +9,7 @@ use Inertia\Inertia;
 Route::resource('register', UserController::class);
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
+    return Inertia::render('Prelogin', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
