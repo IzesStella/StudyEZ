@@ -58,11 +58,9 @@
       </div>
     </div>
   </div>
-  <Preloading :show="loading" />
 </template>
 
 <script>
-import Preloading from '@/Components/Utils/Preloading.vue';
 import { toast } from 'vue3-toastify';
 
 export default {
@@ -117,14 +115,11 @@ export default {
           this.errors = errors;
         },
 
-        onFinish: () => {
+      onFinish: () => {
           this.loading = false;
         },
       });
     },
-  },
-  components: {
-    Preloading,
   },
 };
 </script>
