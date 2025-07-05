@@ -1,128 +1,108 @@
+<script setup>
+import { useForm, router, usePage } from '@inertiajs/vue3'  // adicionei usePage
+import { toast } from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
+import { watch } from 'vue'
+import CorujaImg from '@/assets/images/CorujaSEMFUNDO.png'
+
+// Verifica se já está logado, se sim redireciona direto pro dashboard
+const auth = usePage().props.auth
+if (auth && auth.user) {
+  router.replace('/dashboard')
+}
+
+const form = useForm({
+  name: '',
+  email: '',
+  password: '',
+  password_confirmation: '',
+  role: 'student',
+})
+
+watch(
+  () => form.errors,
+  (errs) => {
+    Object.values(errs).flat().forEach(msg => toast.error(msg))
+  }
+)
+
+function submit() {
+  form.post(route('register'), {
+    onSuccess: () => {
+      toast.success('Registrado com sucesso! Faça login.')
+      router.replace(route('login')) // trocar para replace ao invés de get
+    },
+  })
+}
+</script>
+
 <template>
   <div class="flex h-screen">
-    <!-- Lado esquerdo -->
     <div class="w-1/2 flex items-center justify-center bg-yellow-100">
-      <img
-        src="/images/CorujaSEMFUNDO.png"
-        alt="Coruja Acadêmica"
-        class="w-96"
-      />
+      <img :src="CorujaImg" alt="Coruja Acadêmica" class="w-96" />
     </div>
-
-    <!-- Lado direito -->
-
     <div class="w-1/2 flex items-center justify-center bg-white p-10">
       <div class="w-full max-w-md">
         <h2 class="text-2xl font-bold text-center mb-6">Cadastre-se</h2>
-
-        <!-- Mensagens de erro -->
-        <div
-          v-if="errors.length"
-          class="mb-4 p-3 bg-red-100 text-red-600 rounded-lg"
-        >
-          <ul>
-            <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
-          </ul>
-        </div>
-
-        <!-- Formulário -->
-        <form @submit.prevent="sendForm" class="space-y-4">
+        <form @submit.prevent="submit" class="space-y-4">
+          <!-- Nome -->
           <input
-            type="text"
             v-model="form.name"
+            type="text"
             placeholder="Nome"
             class="campo-entrada"
+            :class="{ 'border-red-500': form.errors.name }"
           />
+
+          <!-- Email -->
           <input
-            type="email"
             v-model="form.email"
+            type="email"
             placeholder="E-mail"
             class="campo-entrada"
+            :class="{ 'border-red-500': form.errors.email }"
           />
+
+          <!-- Senha -->
           <input
-            type="password"
             v-model="form.password"
+            type="password"
             placeholder="Senha"
             class="campo-entrada"
+            :class="{ 'border-red-500': form.errors.password }"
           />
+
+          <!-- Confirma Senha -->
           <input
-            type="password"
             v-model="form.password_confirmation"
+            type="password"
             placeholder="Confirmar senha"
             class="campo-entrada"
+            :class="{ 'border-red-500': form.errors.password_confirmation }"
           />
-          <div class="flex justify-center">
-            <button type="submit" class="botao-enviar">Cadastre-se</button>
-          </div>
+
+          <!-- Role -->
+          <select
+            v-model="form.role"
+            class="campo-entrada"
+            :class="{ 'border-red-500': form.errors.role }"
+          >
+            <option value="student">Aluno</option>
+            <option value="monitor">Monitor</option>
+          </select>
+
+          <button
+            type="submit"
+            class="botao-enviar"
+            :disabled="form.processing"
+          >
+            {{ form.processing ? 'Enviando...' : 'Cadastre-se' }}
+          </button>
         </form>
       </div>
     </div>
   </div>
 </template>
-
-<script>
-import { toast } from 'vue3-toastify';
-
-export default {
-  data() {
-    return {
-      //tive que colocar os nomes em ingles, no banco ta em ingles.
-      form: {
-        name: '',
-        email: '',
-        password: '',
-        password_confirmation: '',
-      },
-      errors: [],
-      loading: false,
-    };
-  },
-  methods: {
-    sendForm() {
-      this.loading = true;
-      if (this.form.password !== this.form.password_confirmation) {
-        this.errors = { password: ['As senhas não correspondem.'] };
-        toast.error(this.errors.password[0], {
-          position: 'top-center',
-          duration: 3000,
-        });
-        this.loading = false;
-        return;
-      }
-
-      this.errors = {}; // Limpa erros antes de enviar
-
-      this.$inertia.post('/register', this.form, {
-        onSuccess: () => {
-          console.log('Usuário cadastrado com sucesso!');
-          toast.success('Registro bem-sucedido!', {
-            position: 'top-center',
-            duration: 3000,
-          });
-          this.$inertia.visit(route('login'));
-        },
-
-        onError: (errors) => {
-          console.log(errors);
-          for (let field in errors) {
-            if (errors[field]) {
-              toast.error(errors[field], {
-                position: 'top-center',
-                duration: 3000,
-              });
-            }
-          }
-          this.errors = errors;
-        },
-
-      onFinish: () => {
-          this.loading = false;
-        },
-      });
-    },
-  },
-};
-</script>
 
 <style scoped>
 .campo-entrada {
@@ -132,26 +112,29 @@ export default {
   border-radius: 8px;
   font-size: 16px;
   outline: none;
-  background-color: white;
   transition: border-color 0.3s;
 }
-
 .campo-entrada:focus {
   border-color: #3b82f6;
 }
-
+.border-red-500 {
+  border-color: #f87171 !important;
+}
 .botao-enviar {
-  width: 70%;
+  width: 100%;
   background-color: #135572;
   color: white;
   font-weight: bold;
   padding: 12px;
   border-radius: 8px;
-  text-align: center;
+  cursor: pointer;
   transition: background-color 0.3s;
 }
-
-.botao-enviar:hover {
+.botao-enviar[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.botao-enviar:hover:enabled {
   background-color: #53bbe9;
 }
 </style>

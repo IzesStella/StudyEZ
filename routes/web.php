@@ -1,30 +1,36 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
-Route::resource('register', UserController::class);
+// Rota raiz para pré‑login, apenas para convidados
+Route::middleware('guest')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Prelogin');
+    })->name('prelogin');
 
-Route::get('/', function () {
-    return Inertia::render('Prelogin', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    // Registro
+    Route::get('/register', [RegisteredUserController::class, 'create'])
+         ->name('register');
+    Route::post('/register', [RegisteredUserController::class, 'store']);
+
+    // Login
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])
+         ->name('login');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
+// ** ESTA PARTE GARANTE QUE /dashboard EXISTA **
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/dashboard', fn() => Inertia::render('Dashboard'))
+         ->name('dashboard');
+
+    // logout
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+         ->name('logout');
 });
 
+// Rotas de reset de senha e verificação de e‑mail
 require __DIR__.'/auth.php';

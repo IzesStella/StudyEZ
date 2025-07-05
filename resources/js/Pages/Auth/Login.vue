@@ -1,15 +1,14 @@
 <template>
   <div class="tela">
     <div class="caixa">
-      <!-- Lado esquerdo (imagem) -->
       <div class="lado-esquerdo">
         <img src="/images/imgLogin.png" alt="Login" class="Login" />
       </div>
 
-      <!-- Lado direito (formulário) -->
       <div class="lado-direito">
         <h2 class="titulo">Login</h2>
         <form @submit.prevent="login">
+          <!-- campos de email e senha -->
           <div class="campo">
             <div class="input-box">
               <span class="icone">📧</span>
@@ -18,10 +17,10 @@
                 v-model="form.email"
                 placeholder="E-mail"
                 class="input"
+                required
               />
             </div>
           </div>
-
           <div class="campo">
             <div class="input-box">
               <span class="icone">🔒</span>
@@ -30,64 +29,48 @@
                 v-model="form.password"
                 placeholder="Senha"
                 class="input"
+                required
               />
             </div>
           </div>
 
-          <div class="esqueci">
-            <a href="#" class="link">Esqueceu sua senha?</a>
-          </div>
-
-          <button type="submit" class="botao">Entrar</button>
+          <button type="submit" class="botao" :disabled="processing">
+            {{ processing ? 'Entrando...' : 'Entrar' }}
+          </button>
         </form>
       </div>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { useForm, router } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import { toast } from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
 
-export default {
-  components: {
-   
-  },
-  data() {
-    return {
-      form: {
-        email: '',
-        password: '',
-      },
-      errors: [],
-      loading: false,
-    };
-  },
-  methods: {
-    login() {
-      this.loading = true;
-      this.$inertia.post('/login', this.form, {
-        onSuccess: () => {
-          toast.success('Login bem-sucedido!', {
-            position: 'top-center',
-            duration: 3000,
-          });
-          // Redirecionamento pode ser definido aqui ou no controller
-        },
-        onError: (errors) => {
-          const errorMessage =
-            errors.message || 'Ocorreu um erro ao fazer login.';
-          toast.error(errorMessage, {
-            position: 'top-center',
-            duration: 3000,
-          });
-          this.errors = errors;
-        },
-        onFinish: () => {
-          this.loading = false;
-        },
-      });
+// cria formulário Inertia
+const form = useForm({
+  email: '',
+  password: '',
+})
+
+const processing = computed(() => form.processing)
+
+function login() {
+  form.post(route('login'), {
+    onSuccess: () => {
+      toast.success('Bem-vindo!')
+      router.replace({ name: 'dashboard' })
     },
-  },
-};
+    onError: errors => {
+      Object.values(errors).flat().forEach(msg => toast.error(msg))
+    },
+    onFinish: () => {
+      form.reset('password')
+    },
+  })
+}
 </script>
 
 <style scoped>
@@ -96,7 +79,7 @@ export default {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-image: url('/images/BackgroundLogin.png'); 
+  background-image: url('/images/BackgroundLogin.png');
   background-size: cover;
 }
 
@@ -121,7 +104,6 @@ export default {
 
 .Login {
   width: 100%;
-  max-width: none;
   height: auto;
   display: block;
 }
@@ -200,6 +182,11 @@ export default {
   background: #53bbe9;
 }
 
+.botao[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .caixa {
     flex-direction: column;
@@ -209,10 +196,6 @@ export default {
   .lado-esquerdo {
     order: -1;
     padding: 30px;
-  }
-
-  .coruja {
-    max-width: 200px;
   }
 
   .lado-direito {
