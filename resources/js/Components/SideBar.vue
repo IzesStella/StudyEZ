@@ -34,7 +34,7 @@ export default {
 
 .sidebar {
   width: 100px;
-  background-color: #EBF4FF;
+  background-color: #B0D5FF;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -45,6 +45,8 @@ export default {
   position: fixed;
   height: 100%;
   margin: 0%;
+  border-top-right-radius: 50px;     
+  border-bottom-right-radius: 50px; 
 }
 
 .small-logo {
@@ -59,13 +61,11 @@ nav {
   height: 100%;
 }
 
-/* Ajusta o contêiner dos botões para ocupar o espaço disponível e centralizá-los */
 .nav-buttons {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* Removemos height e margin-top para deixar o flex cuidar do posicionamento */
 }
 
 .nav-button {

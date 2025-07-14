@@ -1,5 +1,5 @@
 <script setup>
-import { useForm, router, usePage } from '@inertiajs/vue3'  // adicionei usePage
+import { useForm, router, usePage } from '@inertiajs/vue3'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import { watch } from 'vue'
@@ -30,81 +30,92 @@ function submit() {
   form.post(route('register'), {
     onSuccess: () => {
       toast.success('Registrado com sucesso! Faça login.')
-      router.replace(route('login')) // trocar para replace ao invés de get
+      router.replace(route('login'))
     },
   })
 }
 </script>
 
 <template>
-  <div class="flex h-screen">
-    <div class="w-1/2 flex items-center justify-center bg-yellow-100">
-      <img :src="CorujaImg" alt="Coruja Acadêmica" class="w-96" />
-    </div>
-    <div class="w-1/2 flex items-center justify-center bg-white p-10">
-      <div class="w-full max-w-md">
-        <h2 class="text-2xl font-bold text-center mb-6">Cadastre-se</h2>
-        <form @submit.prevent="submit" class="space-y-4">
-          <!-- Nome -->
-          <input
-            v-model="form.name"
-            type="text"
-            placeholder="Nome"
-            class="campo-entrada"
-            :class="{ 'border-red-500': form.errors.name }"
-          />
+  <div class="tela flex items-center justify-center p-4 min-h-screen">
+    <div class="container-form w-full max-w-md">
+      <h2 class="text-2xl font-bold text-center mb-6">Cadastre-se</h2>
+      <form @submit.prevent="submit" class="space-y-4">
+        <!-- Nome -->
+        <input
+          v-model="form.name"
+          type="text"
+          placeholder="Nome"
+          class="campo-entrada"
+          :class="{ 'border-red-500': form.errors.name }"
+        />
 
-          <!-- Email -->
-          <input
-            v-model="form.email"
-            type="email"
-            placeholder="E-mail"
-            class="campo-entrada"
-            :class="{ 'border-red-500': form.errors.email }"
-          />
+        <!-- Email -->
+        <input
+          v-model="form.email"
+          type="email"
+          placeholder="E-mail"
+          class="campo-entrada"
+          :class="{ 'border-red-500': form.errors.email }"
+        />
 
-          <!-- Senha -->
-          <input
-            v-model="form.password"
-            type="password"
-            placeholder="Senha"
-            class="campo-entrada"
-            :class="{ 'border-red-500': form.errors.password }"
-          />
+        <!-- Senha -->
+        <input
+          v-model="form.password"
+          type="password"
+          placeholder="Senha"
+          class="campo-entrada"
+          :class="{ 'border-red-500': form.errors.password }"
+        />
 
-          <!-- Confirma Senha -->
-          <input
-            v-model="form.password_confirmation"
-            type="password"
-            placeholder="Confirmar senha"
-            class="campo-entrada"
-            :class="{ 'border-red-500': form.errors.password_confirmation }"
-          />
+        <!-- Confirma Senha -->
+        <input
+          v-model="form.password_confirmation"
+          type="password"
+          placeholder="Confirmar senha"
+          class="campo-entrada"
+          :class="{ 'border-red-500': form.errors.password_confirmation }"
+        />
 
-          <!-- Role -->
-          <select
-            v-model="form.role"
-            class="campo-entrada"
-            :class="{ 'border-red-500': form.errors.role }"
-          >
-            <option value="student">Aluno</option>
-            <option value="monitor">Monitor</option>
-          </select>
+        <!-- Role -->
+        <select
+          v-model="form.role"
+          class="campo-entrada"
+          :class="{ 'border-red-500': form.errors.role }"
+        >
+          <option value="student">Aluno</option>
+          <option value="monitor">Monitor</option>
+        </select>
 
-          <button
-            type="submit"
-            class="botao-enviar"
-            :disabled="form.processing"
-          >
-            {{ form.processing ? 'Enviando...' : 'Cadastre-se' }}
-          </button>
-        </form>
-      </div>
+        <button
+          type="submit"
+          class="botao-enviar"
+          :disabled="form.processing"
+        >
+          {{ form.processing ? 'Enviando...' : 'Cadastre-se' }}
+        </button>
+      </form>
     </div>
   </div>
 </template>
 
 <style scoped>
+.tela {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-image: url('/images/BackgroundLogin.png');
+  background-size: cover;
+}
+
+.container-form {
+  background: #f8fafc;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px 0 rgba(14, 0, 0, 0.08);
+  padding: 32px 24px;
+  margin: 0 auto;
+}
 .campo-entrada {
   width: 100%;
   padding: 12px;
@@ -114,21 +125,17 @@ function submit() {
   outline: none;
   transition: border-color 0.3s;
 }
-.campo-entrada:focus {
-  border-color: #3b82f6;
-}
-.border-red-500 {
-  border-color: #f87171 !important;
-}
 .botao-enviar {
-  width: 100%;
-  background-color: #135572;
-  color: white;
+  width: 40%;
+  background-color: #B0D5FF;
+  color: rgb(0, 0, 0);
   font-weight: bold;
   padding: 12px;
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s;
+  display: block;
+  margin: 0 auto;
 }
 .botao-enviar[disabled] {
   opacity: 0.6;
