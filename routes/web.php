@@ -27,6 +27,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn() => Inertia::render('Dashboard'))
          ->name('dashboard');
 
+     // Rota de pesquisa 
+    Route::get('/search', fn() => Inertia::render('Search'))
+         ->name('search');
+
+    // Rota de perfil
+    Route::get('/profile', fn() => Inertia::render('Profile'))
+         ->name('profile');
+
     // logout
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
          ->name('logout');
@@ -34,3 +42,4 @@ Route::middleware('auth')->group(function () {
 
 // Rotas de reset de senha e verificação de e‑mail
 require __DIR__.'/auth.php';
+
