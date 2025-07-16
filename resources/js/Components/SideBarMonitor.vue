@@ -8,13 +8,18 @@
           <font-awesome-icon :icon="['fas', 'home']" style="color: #FF9500;" />
         </button>
         <!-- Quadradinhos com "+" -->
-        <button class="nav-button" @click="goToRoute('/search')" style="color: #FF9500;">
+        <button class="nav-button" @click="goToRoute('/search')" style="color:#FF9500;">
           <font-awesome-icon :icon="['fas', 'plus']" />
+        </button>
+        <!-- Botão extra para monitor -->
+        <button class="nav-button" @click="goToRoute('/comunidade/criar')" style="color: #FF9500;">
+          <font-awesome-icon :icon="['fas', 'users']" />
+          <font-awesome-icon :icon="['fas', 'plus']" style="color: #FF9500;" />
         </button>
       </div>
       <!-- Perfil -->
       <button class="nav-button profile-button" @click="goToRoute('/profile')">
-        <font-awesome-icon :icon="['fas', 'user']" class="profile-icon" style="color: #FF9500;"/>
+        <font-awesome-icon :icon="['fas', 'user']" class="profile-icon" style="color: #FF9500;" />
       </button>
     </nav>
   </div>
