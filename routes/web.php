@@ -27,6 +27,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn() => Inertia::render('Dashboard'))
          ->name('dashboard');
 
+    // Dashboard do monitor
+    Route::get('/dashboard-monitor', fn() => Inertia::render('DashboardMonitor'))
+         ->name('dashboard.monitor');
+
+    // Dashboard do aluno (monitorando)
+    Route::get('/dashboard-aluno', fn() => Inertia::render('DashboardAluno'))
+         ->name('dashboard.aluno');
+
      // Rota de pesquisa 
     Route::get('/search', fn() => Inertia::render('Search'))
          ->name('search');

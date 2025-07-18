@@ -4,12 +4,12 @@
     <main class="main-content">
       <header class="header">
         <h1>O que você deseja aprender hoje?</h1>
+        <button class="logout-btn" @click="logout">Sair</button>
       </header>
 
       <div class="center-image">
         <img src="/images/imgDashboard.png" alt="Menina perguntando se já está dentro de alguma comunidade" />
       </div>
-      <!-- restante do dashboard -->
       <PlannerBar />
     </main>
   </div>
@@ -45,6 +45,25 @@ function logout() {
   font-size: 24px;
   font-weight: bold;
   color: #002F66;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logout-btn {
+  background: #FF9500;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-size: 1rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.logout-btn:hover {
+  background: #e07d00;
 }
 
 .center-image {

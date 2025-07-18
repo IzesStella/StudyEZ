@@ -1,9 +1,11 @@
 <script setup>
 import PlannerBar from '@/Components/PlannerBar.vue'
 import SideBar from '@/Components/SideBar.vue'
+import SideBarMonitor from '@/Components/SideBarMonitor.vue'
 import { usePage, router } from '@inertiajs/vue3'
 
 const user = usePage().props.auth.user
+const sidebarComponent = user.role === 'monitor' ? SideBarMonitor : SideBar
 
 function goToEdit() {
   router.visit('/profile/edit')
@@ -12,13 +14,13 @@ function goToEdit() {
 
 <template>
   <div class="dashboard-layout">
-    <SideBar />
+    <component :is="sidebarComponent" />
     <div class="profile-page">
         <img class="profile-avatar" :src="user.avatar || '/images/default-avatar.png'" alt="Avatar" />
         <div class="profile-info">
           <h2>{{ user.name }}</h2>
           <p>Email: {{ user.email }}</p>
-          <p>Tipo: {{ user.type }}</p>
+          <p>Tipo: {{ user.role }}</p>
           <button class="edit-btn" @click="goToEdit">Editar Perfil</button>
         </div>
       <PlannerBar />

@@ -1,14 +1,19 @@
 <script setup>
 import PlannerBar from '@/Components/PlannerBar.vue'
 import SideBar from '@/Components/SideBar.vue'
+import SideBarMonitor from '@/Components/SideBarMonitor.vue'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { library } from '@fortawesome/fontawesome-svg-core'
+import { usePage } from '@inertiajs/vue3'
 library.add(faSearch)
+
+const user = usePage().props.auth.user
+const sidebarComponent = user.role === 'monitor' ? SideBarMonitor : SideBar
 </script>
 
 <template>
   <div class="dashboard-layout">
-    <SideBar />
+    <component :is="sidebarComponent" />
     <div class="search-page">
       <div class="search-input-wrapper">
         <input

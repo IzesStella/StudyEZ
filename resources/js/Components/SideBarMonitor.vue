@@ -4,7 +4,7 @@
     <nav>
       <div class="nav-buttons">
         <!-- Casinha -->
-        <button class="nav-button" @click="goToRoute('/dashboard')">
+        <button class="nav-button" @click="goToRoute('/dashboard-monitor')">
           <font-awesome-icon :icon="['fas', 'home']" style="color: #FF9500;" />
         </button>
         <!-- Quadradinhos com "+" -->
