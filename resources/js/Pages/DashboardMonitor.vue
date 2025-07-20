@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-layout">
-    <SideBar />
+    <SideBar @open-create-community="showCreateCommunity = true" />
     <main class="main-content">
       <header class="header">
         <h1>O que você deseja ensinar hoje?</h1>
@@ -13,15 +13,20 @@
       <!-- restante do dashboard -->
       <PlannerBar />
     </main>
+    <CreateCommunity v-if="showCreateCommunity" @close="showCreateCommunity = false" />
   </div>
 </template>
 
 <script setup>
 import SideBar from '@/Components/SideBarMonitor.vue'
 import PlannerBar from '@/Components/PlannerBar.vue'
+import CreateCommunity from '@/Components/CreateCommunity.vue'
+import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
+
+const showCreateCommunity = ref(false)
 
 function logout() {
   router.post(route('logout'), {

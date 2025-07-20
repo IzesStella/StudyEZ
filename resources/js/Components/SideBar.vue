@@ -7,9 +7,9 @@
         <button class="nav-button" @click="goToRoute('/dashboard-aluno')">
           <font-awesome-icon :icon="['fas', 'home']" style="color: #FF9500;" />
         </button>
-        <!-- Quadradinhos com "+" -->
+        <!--  lupa -->
         <button class="nav-button" @click="goToRoute('/search')" style="color: #FF9500;">
-          <font-awesome-icon :icon="['fas', 'plus']" />
+          <font-awesome-icon :icon="['fas', 'search']" />
         </button>
       </div>
       <!-- Perfil -->

@@ -7,12 +7,12 @@
         <button class="nav-button" @click="goToRoute('/dashboard-monitor')">
           <font-awesome-icon :icon="['fas', 'home']" style="color: #FF9500;" />
         </button>
-        <!-- Quadradinhos com "+" -->
-        <button class="nav-button" @click="goToRoute('/search')" style="color:#FF9500;">
-          <font-awesome-icon :icon="['fas', 'plus']" />
+        <!--lupa -->
+        <button class="nav-button" @click="goToRoute('/search')" style="color: #FF9500;">
+          <font-awesome-icon :icon="['fas', 'search']" />
         </button>
         <!-- Botão extra para monitor -->
-        <button class="nav-button" @click="goToRoute('/comunidade/criar')" style="color: #FF9500;">
+        <button class="nav-button" @click="$emit('open-create-community')" style="color: #FF9500;">
           <font-awesome-icon :icon="['fas', 'users']" />
           <font-awesome-icon :icon="['fas', 'plus']" style="color: #FF9500;" />
         </button>
@@ -26,13 +26,13 @@
 </template>
 
 <script>
-import { router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3' 
 
 export default {
   methods: {
     goToRoute(route) {
       router.visit(route);
-    },
+    }
   },
 };
 </script>

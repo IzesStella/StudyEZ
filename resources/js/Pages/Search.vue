@@ -2,18 +2,21 @@
 import PlannerBar from '@/Components/PlannerBar.vue'
 import SideBar from '@/Components/SideBar.vue'
 import SideBarMonitor from '@/Components/SideBarMonitor.vue'
+import CreateCommunity from '@/Components/CreateCommunity.vue'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { usePage } from '@inertiajs/vue3'
+import { ref } from 'vue'
 library.add(faSearch)
 
 const user = usePage().props.auth.user
 const sidebarComponent = user.role === 'monitor' ? SideBarMonitor : SideBar
+const showCreateCommunity = ref(false)
 </script>
 
 <template>
   <div class="dashboard-layout">
-    <component :is="sidebarComponent" />
+    <component :is="sidebarComponent" @open-create-community="showCreateCommunity = true" />
     <div class="search-page">
       <div class="search-input-wrapper">
         <input
@@ -27,6 +30,7 @@ const sidebarComponent = user.role === 'monitor' ? SideBarMonitor : SideBar
         <!-- Resultados vão aqui -->
       </div>
       <PlannerBar />
+      <CreateCommunity v-if="showCreateCommunity" @close="showCreateCommunity = false" />
     </div>
   </div>
 </template>
