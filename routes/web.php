@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\CommunityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,9 +60,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard-aluno',   fn() => Inertia::render('DashboardAluno'))
          ->name('dashboard.aluno');
 
-    // Busca
+    // tela de busca
     Route::get('/search', fn() => Inertia::render('Search'))
          ->name('search');
+
+     //rota pra buscar comunidades
+     Route::get('/communities', [CommunityController::class, 'explore'])
+     ->middleware('auth')
+     ->name('communities.explore');
+
 
     // Perfil
     Route::get('/profile', fn() => Inertia::render('Profile'))
@@ -70,7 +77,18 @@ Route::middleware('auth')->group(function () {
     // Logout
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
          ->name('logout');
+
+       // ROTA IMPORTANTE PARA BUSCAR COMUNIDADES DO MONITOR LOGADO
+         // Essa rota retorna as comunidades em JSON (ex: para o dashboard)
+         // Usada em DashboardMonitor.vue via Axios, após criar uma comunidade
+      Route::get('/communities', [CommunityController::class, 'index'])
+         ->name('communities.index');
+     //comunidade - criação
+     Route::post('/communities', [CommunityController::class, 'store'])
+     ->name('communities.store');
+
 });
+
 
 // Rota de verificação de e‑mail e confirmação de senha (Breeze)
 require __DIR__.'/auth.php';

@@ -12,6 +12,7 @@ class Community extends Model
     protected $fillable = [
         'name',
         'description',
+        'user_id',  //incluido
     ];
 
     public function users()
@@ -24,6 +25,9 @@ class Community extends Model
         return $this->hasMany(Post::class);
     }
 
+    /**
+     * Quem criou a comunidade (monitor responsável)
+     */
     public function creator()
     {
         return $this->belongsTo(User::class, 'user_id');

@@ -7,15 +7,32 @@
         <button class="logout-btn" @click="logout">Sair</button>
       </header>
 
-       <div class="balloon">
-        Humm... Parece que você ainda não tem nenhuma comunidade cadastrada, selecione o botão de “+” na barra lateral e crie uma comunidade.
+      <!-- Se o monitor tiver comunidades, mostra elas -->
+      <div v-if="communities.length > 0" class="communities-list">
+        <h2>Suas Comunidades:</h2>
+        <ul>
+          <li v-for="community in communities" :key="community.id" class="community-item">
+            <strong>{{ community.name }}</strong><br />
+            <small>{{ community.description }}</small>
+          </li>
+        </ul>
       </div>
-      <div class="center-image">
-        <img src="/images/imgDashboard.png" alt="Menina perguntando se já está dentro de alguma comunidade" />
+
+      <!-- Se não tiver comunidade, mostra a imagem e balão -->
+      <div v-else>
+        <div class="balloon">
+          Humm... Parece que você ainda não tem nenhuma comunidade cadastrada. Selecione o botão de “+” na barra lateral e crie uma comunidade.
+        </div>
+        <div class="center-image">
+          <img src="/images/imgDashboard.png" alt="Menina perguntando se já está dentro de alguma comunidade" />
+        </div>
       </div>
+
       <PlannerBar />
     </main>
-    <CreateCommunity v-if="showCreateCommunity" @close="showCreateCommunity = false" />
+
+    <!-- Modal de criação -->
+    <CreateCommunity v-if="showCreateCommunity" @close="handleCloseCreateCommunity" />
   </div>
 </template>
 
@@ -23,12 +40,34 @@
 import SideBar from '@/Components/SideBarMonitor.vue'
 import PlannerBar from '@/Components/PlannerBar.vue'
 import CreateCommunity from '@/Components/CreateCommunity.vue'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
+import axios from 'axios'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
 const showCreateCommunity = ref(false)
+const communities = ref([])
+
+// Busca comunidades ao carregar a tela
+const fetchCommunities = async () => {
+  try {
+    const response = await axios.get('/communities')
+    communities.value = response.data
+  } catch (error) {
+    toast.error('Erro ao carregar comunidades.')
+    console.error(error)
+  }
+}
+
+onMounted(() => {
+  fetchCommunities()
+})
+
+function handleCloseCreateCommunity() {
+  showCreateCommunity.value = false
+  fetchCommunities() // Recarrega comunidades após criar uma nova
+}
 
 function logout() {
   router.post(route('logout'), {
@@ -107,4 +146,18 @@ function logout() {
   border-color: #e3f0ff transparent transparent transparent;
 }
 
+/* Lista de comunidades */
+.communities-list {
+  margin-left: 100px;
+  margin-top: 32px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.community-item {
+  background: #f7f9ff;
+  border-left: 5px solid #002f66;
+  padding: 12px 18px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+}
 </style>

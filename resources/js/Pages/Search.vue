@@ -7,6 +7,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
+
 library.add(faSearch)
 
 const user = usePage().props.auth.user
