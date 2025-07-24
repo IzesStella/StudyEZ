@@ -23,7 +23,7 @@
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.7.2",
         "@fortawesome/free-solid-svg-icons": "^6.7.2",
-        "@fortawesome/vue-fontawesome": "^3.0.8",
+        "@fortawesome/vue-fontawesome": "^3.1.0",
         "@inertiajs/progress": "^0.2.7",
         "v-calendar": "^3.1.2",
         "vue-cal": "^4.10.2",

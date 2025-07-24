@@ -3,15 +3,17 @@ import PlannerBar from '@/Components/PlannerBar.vue'
 import SideBar from '@/Components/SideBar.vue'
 import SideBarMonitor from '@/Components/SideBarMonitor.vue'
 import CreateCommunity from '@/Components/CreateCommunity.vue'
-import { usePage, router } from '@inertiajs/vue3'
+import EditProfileModal from '@/Components/EditProfileModal.vue'
+import { usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 const user = usePage().props.auth.user
 const sidebarComponent = user.role === 'monitor' ? SideBarMonitor : SideBar
 const showCreateCommunity = ref(false)
+const showEditProfile = ref(false)
 
 function goToEdit() {
-  router.visit('/profile/edit')
+  showEditProfile.value = true
 }
 </script>
 
@@ -28,6 +30,11 @@ function goToEdit() {
         </div>
       <PlannerBar />
       <CreateCommunity v-if="showCreateCommunity" @close="showCreateCommunity = false" />
+      <EditProfileModal 
+        v-if="showEditProfile" 
+        :must-verify-email="false"
+        @close="showEditProfile = false" 
+      />
     </div>
   </div>
 </template>

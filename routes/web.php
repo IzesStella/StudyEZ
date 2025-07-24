@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CommunityController;
 
 /*
@@ -71,8 +72,11 @@ Route::middleware('auth')->group(function () {
 
 
     // Perfil
-    Route::get('/profile', fn() => Inertia::render('Profile'))
-         ->name('profile');
+    Route::get('/profile', fn() => Inertia::render('Profile'))->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Logout
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
