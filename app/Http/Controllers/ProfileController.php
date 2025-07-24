@@ -62,9 +62,9 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's profile photo.
+     * Update the user's profile avatar.
      */
-    public function updatePhoto(Request $request): RedirectResponse
+    public function updateAvatar(Request $request): RedirectResponse
     {
         $request->validate([
             'photo' => ['required', 'image', 'max:2048'],
@@ -76,7 +76,7 @@ class ProfileController extends Controller
             $photo = $request->file('photo');
             $path = $photo->store('profile_photos', 'public');
 
-            // Delete old photo if exists
+            // Delete old avatar if exists
             if ($user->profile_photo_path) {
                 \Storage::disk('public')->delete($user->profile_photo_path);
             }
