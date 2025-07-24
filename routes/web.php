@@ -5,8 +5,15 @@ use Inertia\Inertia;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
-// Rota raiz para pré‑login, apenas para convidados
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Rotas de convidados (guest)
 Route::middleware('guest')->group(function () {
+    // Pré‑login
     Route::get('/', function () {
         return Inertia::render('Prelogin');
     })->name('prelogin');
@@ -20,34 +27,50 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])
          ->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+
+    // Esqueci a senha (Breeze)
+    Route::get('/forgot-password', [\App\Http\Controllers\Auth\PasswordResetLinkController::class, 'create'])
+         ->name('password.request');
+    Route::post('/forgot-password', [\App\Http\Controllers\Auth\PasswordResetLinkController::class, 'store'])
+         ->name('password.email');
+    Route::get('/reset-password/{token}', [\App\Http\Controllers\Auth\NewPasswordController::class, 'create'])
+         ->name('password.reset');
+    Route::post('/reset-password', [\App\Http\Controllers\Auth\NewPasswordController::class, 'store'])
+         ->name('password.store');
 });
 
-// ** ESTA PARTE GARANTE QUE /dashboard EXISTA **
+// Rotas autenticadas (auth)
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', fn() => Inertia::render('Dashboard'))
-         ->name('dashboard');
+    // Dashboard genérico que dispatcha para os dois componentes
+    Route::get('/dashboard', function () {
+        $role = auth()->user()->role;
 
-    // Dashboard do monitor
+        if ($role === 'monitor') {
+            return Inertia::render('DashboardMonitor');
+        }
+
+        // padrão = aluno
+        return Inertia::render('DashboardAluno');
+    })->name('dashboard');
+
+    // (Opcional) rotas separadas para acessos diretos
     Route::get('/dashboard-monitor', fn() => Inertia::render('DashboardMonitor'))
          ->name('dashboard.monitor');
-
-    // Dashboard do aluno (monitorando)
-    Route::get('/dashboard-aluno', fn() => Inertia::render('DashboardAluno'))
+    Route::get('/dashboard-aluno',   fn() => Inertia::render('DashboardAluno'))
          ->name('dashboard.aluno');
 
-     // Rota de pesquisa 
+    // Busca
     Route::get('/search', fn() => Inertia::render('Search'))
          ->name('search');
 
-    // Rota de perfil
+    // Perfil
     Route::get('/profile', fn() => Inertia::render('Profile'))
          ->name('profile');
 
-    // logout
+    // Logout
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
          ->name('logout');
 });
 
-// Rotas de reset de senha e verificação de e‑mail
+// Rota de verificação de e‑mail e confirmação de senha (Breeze)
 require __DIR__.'/auth.php';
-

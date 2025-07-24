@@ -8,7 +8,7 @@
       <div class="lado-direito">
         <h2 class="titulo">Login</h2>
         <form @submit.prevent="login">
-          <!-- campos de email e senha -->
+          <!-- E‑mail -->
           <div class="campo">
             <div class="input-box">
               <span class="icone">📧</span>
@@ -21,6 +21,8 @@
               />
             </div>
           </div>
+
+          <!-- Senha -->
           <div class="campo">
             <div class="input-box">
               <span class="icone">🔒</span>
@@ -44,12 +46,12 @@
 </template>
 
 <script setup>
-import { useForm, router } from '@inertiajs/vue3'
+import { useForm, usePage, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
-// cria formulário Inertia
+// Formulário Inertia
 const form = useForm({
   email: '',
   password: '',
@@ -59,11 +61,23 @@ const processing = computed(() => form.processing)
 
 function login() {
   form.post(route('login'), {
-    onSuccess: () => {
-      toast.success('Bem-vindo!')
-      router.replace({ name: 'dashboard' })
+    onSuccess: (page) => {
+      toast.success('Bem‑vindo!')
+
+      // Lê o role compartilhado pelo Inertia
+      const role = page.props.auth.user.role
+
+      if (role === 'monitor') {
+        // Inertia.get com replace=true
+        router.get(route('dashboard.monitor'), {}, { replace: true })
+      } else if (role === 'student') {
+        router.get(route('dashboard.aluno'), {}, { replace: true })
+      } else {
+        // fallback para rota genérica
+        router.get(route('dashboard'), {}, { replace: true })
+      }
     },
-    onError: errors => {
+    onError: (errors) => {
       Object.values(errors).flat().forEach(msg => toast.error(msg))
     },
     onFinish: () => {
