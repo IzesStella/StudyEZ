@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Community;
 use Illuminate\Http\Request;
+use Inertia\Inertia;   //add
 
 class CommunityController extends Controller
 {
@@ -108,4 +109,25 @@ class CommunityController extends Controller
         return response()->json(null, 204);
     }
 
+     public function explore() //add
+    {
+        $communities = Community::all();
+
+        return Inertia::render('CommunityPage', [
+            'communities' => $communities
+        ]);
+    }
+
+    public function search(Request $request)
+{
+    $q = $request->input('search', '');
+    $communities = Community::where('name', 'like', "%{$q}%")->get();
+    return Inertia::render('Search', [
+        'communities' => $communities,
+        'search' => $q,
+    ]);
 }
+
+}
+
+

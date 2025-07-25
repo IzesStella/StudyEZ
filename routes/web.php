@@ -6,6 +6,9 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CommunityController;
+use Illuminate\Http\Request;
+use App\Models\Community;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -61,14 +64,34 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard-aluno',   fn() => Inertia::render('DashboardAluno'))
          ->name('dashboard.aluno');
 
-    // tela de busca
-    Route::get('/search', fn() => Inertia::render('Search'))
-         ->name('search');
 
+Route::get('/search', function (Request $request) {
+    $search = $request->input('search');
+
+    $communities = [];
+
+    if ($search) {
+        $communities = Community::with('creator') // carrega relacionamento!
+            ->where('name', 'like', '%' . $search . '%')
+            ->get();
+    }
+
+    return Inertia::render('Search', [
+        'communities' => $communities,
+        'search' => $search,
+    ]);
+})->name('search');
+         
      //rota pra buscar comunidades
      Route::get('/communities', [CommunityController::class, 'explore'])
      ->middleware('auth')
      ->name('communities.explore');
+
+     //pra estilizar comunidade
+     Route::middleware('auth')
+     ->get('/community', [CommunityController::class, 'explore'])
+     ->name('community.page');
+
 
 
     // Perfil
