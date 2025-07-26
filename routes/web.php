@@ -65,31 +65,16 @@ Route::middleware('auth')->group(function () {
          ->name('dashboard.aluno');
 
 
-Route::get('/search', function (Request $request) {
-    $search = $request->input('search');
-
-    $communities = [];
-
-    if ($search) {
-        $communities = Community::with('creator') // carrega relacionamento!
-            ->where('name', 'like', '%' . $search . '%')
-            ->get();
-    }
-
-    return Inertia::render('Search', [
-        'communities' => $communities,
-        'search' => $search,
-    ]);
-})->name('search');
+Route::get('/search', [CommunityController::class, 'search'])
+     ->name('search');
          
      //rota pra buscar comunidades
      Route::get('/communities', [CommunityController::class, 'explore'])
      ->middleware('auth')
      ->name('communities.explore');
 
-     //pra estilizar comunidade
-     Route::middleware('auth')
-     ->get('/community', [CommunityController::class, 'explore'])
+   Route::middleware('auth')
+     ->get('/community/{id}', [CommunityController::class, 'page'])
      ->name('community.page');
 
 

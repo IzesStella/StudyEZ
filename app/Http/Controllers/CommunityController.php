@@ -118,15 +118,28 @@ class CommunityController extends Controller
         ]);
     }
 
-    public function search(Request $request)
-{
-    $q = $request->input('search', '');
-    $communities = Community::where('name', 'like', "%{$q}%")->get();
-    return Inertia::render('Search', [
-        'communities' => $communities,
-        'search' => $q,
-    ]);
-}
+   public function search(Request $request)
+    {
+        $q = $request->input('search', '');
+
+        $communities = Community::with('creator')
+            // só filtra se $q não for vazio
+            ->when($q, fn($query) => $query->where('name', 'like', "%{$q}%"))
+            ->get();
+
+        return Inertia::render('Search', [
+            'communities' => $communities,
+            'search'      => $q,
+        ]);
+    }
+     public function page($id)
+    {
+        $community = Community::with('creator', 'users')->findOrFail($id);
+
+        return Inertia::render('CommunityPage', [
+            'community' => $community,
+        ]);
+    }
 
 }
 
