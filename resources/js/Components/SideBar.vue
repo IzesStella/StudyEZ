@@ -4,7 +4,7 @@
     <nav>
       <div class="nav-buttons">
         <!-- Casinha -->
-        <button class="nav-button" @click="goToRoute('/dashboard-aluno')">
+        <button class="nav-button" @click="goToRoute('/dashboard')">
           <font-awesome-icon :icon="['fas', 'home']" style="color: #FF9500;" />
         </button>
         <!--  lupa -->

@@ -141,6 +141,49 @@ class CommunityController extends Controller
     public function page($id)
     {
         $community = Community::with('creator', 'users')->findOrFail($id);
-        return Inertia::render('CommunityPage', ['community' => $community]);
+
+        // 1) Usuário autenticado (ou null)
+        $user = auth()->user();
+
+        // 2) Se esse usuário já está na comunidade
+        $isSubscribed = $user
+            ? $community->users->contains($user->id)
+            : false;
+
+        return Inertia::render('CommunityPage', [
+            'community'    => $community,
+            'user'         => $user,
+            'isSubscribed' => $isSubscribed,
+        ]);
     }
+
+    public function subscribe($id)
+{
+    $community = Community::findOrFail($id);
+    $this->authorize('join', $community);
+
+    $user = auth()->user();
+    if (! $community->users->contains($user)) {
+        $community->users()->attach($user->id);
+    }
+
+     return redirect()->route('community.page', $community->id)
+                     ->with('success', 'Inscrito com sucesso!');
+}
+
+public function unsubscribe($id)
+{
+    $community = Community::findOrFail($id);
+    $this->authorize('join', $community);
+
+    $user = auth()->user();
+    if ($community->users->contains($user)) {
+        $community->users()->detach($user->id);
+    }
+
+      // volta para a mesma página
+    return redirect()->route('community.page', $community->id)
+                     ->with('success', 'Você saiu da comunidade.');
+}
+
 }

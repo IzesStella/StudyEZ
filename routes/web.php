@@ -6,9 +6,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CommunityController;
-use Illuminate\Http\Request;
-use App\Models\Community;
-
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,24 +14,18 @@ use App\Models\Community;
 |--------------------------------------------------------------------------
 */
 
-// Rotas de convidados (guest)
+// Rotas para convidados (guest)
 Route::middleware('guest')->group(function () {
-    // Pré‑login
-    Route::get('/', function () {
-        return Inertia::render('Prelogin');
-    })->name('prelogin');
+    Route::get('/', fn() => Inertia::render('Prelogin'))->name('prelogin');
 
-    // Registro
     Route::get('/register', [RegisteredUserController::class, 'create'])
          ->name('register');
     Route::post('/register', [RegisteredUserController::class, 'store']);
 
-    // Login
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])
          ->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 
-    // Esqueci a senha (Breeze)
     Route::get('/forgot-password', [\App\Http\Controllers\Auth\PasswordResetLinkController::class, 'create'])
          ->name('password.request');
     Route::post('/forgot-password', [\App\Http\Controllers\Auth\PasswordResetLinkController::class, 'store'])
@@ -44,63 +36,63 @@ Route::middleware('guest')->group(function () {
          ->name('password.store');
 });
 
-// Rotas autenticadas (auth)
+// Rotas para usuários autenticados (auth)
 Route::middleware('auth')->group(function () {
-    // Dashboard genérico que dispatcha para os dois componentes
+    //
+    // 1) Rota genérica /dashboard redireciona conforme papel do usuário
+    //
     Route::get('/dashboard', function () {
-        $role = auth()->user()->role;
-
-        if ($role === 'monitor') {
-            return Inertia::render('DashboardMonitor');
-        }
-
-        // padrão = aluno
-        return Inertia::render('DashboardAluno');
+        $user = auth()->user();
+        return $user->role === 'monitor'
+            ? redirect()->route('dashboard.monitor')
+            : redirect()->route('dashboard.aluno');
     })->name('dashboard');
 
-    // (Opcional) rotas separadas para acessos diretos
+    //
+    // 2) Rotas diretas para cada painel
+    //
+    Route::get('/dashboard-aluno', [UserController::class, 'dashboard'])
+         ->name('dashboard.aluno');
     Route::get('/dashboard-monitor', fn() => Inertia::render('DashboardMonitor'))
          ->name('dashboard.monitor');
-    Route::get('/dashboard-aluno',   fn() => Inertia::render('DashboardAluno'))
-         ->name('dashboard.aluno');
 
+    //
+    // 3) Comunidades: buscar, explorar, ver, criar (monitor)
+    //
+    Route::get('/search',      [CommunityController::class, 'search'])
+         ->name('search');
+    Route::get('/communities', [CommunityController::class, 'explore'])
+         ->name('communities.explore');
+    Route::get('/community/{id}', [CommunityController::class, 'page'])
+         ->name('community.page');
+    Route::post('/communities', [CommunityController::class, 'store'])
+         ->name('communities.store');
 
-Route::get('/search', [CommunityController::class, 'search'])
-     ->name('search');
-         
-     //rota pra buscar comunidades
-     Route::get('/communities', [CommunityController::class, 'explore'])
-     ->middleware('auth')
-     ->name('communities.explore');
+    //
+    // 4) Inscrição e cancelamento (aluno apenas)
+    //
+    Route::post('/communities/{id}/subscribe',   [CommunityController::class, 'subscribe'])
+         ->name('communities.subscribe');
+    Route::delete('/communities/{id}/unsubscribe',[CommunityController::class, 'unsubscribe'])
+         ->name('communities.unsubscribe');
 
-   Route::middleware('auth')
-     ->get('/community/{id}', [CommunityController::class, 'page'])
-     ->name('community.page');
+    //
+    // 5) Perfil e logout
+    //
+    Route::get('/profile',         fn() => Inertia::render('Profile'))
+         ->name('profile.show');
+    Route::get('/profile/edit',    [ProfileController::class, 'edit'])
+         ->name('profile.edit');
+    Route::patch('/profile',       [ProfileController::class, 'update'])
+         ->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])
+         ->name('profile.avatar');
+    Route::delete('/profile',      [ProfileController::class, 'destroy'])
+         ->name('profile.destroy');
 
-
-
-    // Perfil
-    Route::get('/profile', fn() => Inertia::render('Profile'))->name('profile.show');
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Logout
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
          ->name('logout');
-
-       // ROTA IMPORTANTE PARA BUSCAR COMUNIDADES DO MONITOR LOGADO
-         // Essa rota retorna as comunidades em JSON (ex: para o dashboard)
-         // Usada em DashboardMonitor.vue via Axios, após criar uma comunidade
-      Route::get('/communities', [CommunityController::class, 'index'])
-         ->name('communities.index');
-     //comunidade - criação
-     Route::post('/communities', [CommunityController::class, 'store'])
-     ->name('communities.store');
-
 });
 
-
-// Rota de verificação de e‑mail e confirmação de senha (Breeze)
+// Password reset etc. (Breeze)
 require __DIR__.'/auth.php';

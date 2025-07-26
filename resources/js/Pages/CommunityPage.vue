@@ -11,12 +11,26 @@
         <p class="mt-2">{{ community.description }}</p>
       </div>
       <div class="mt-4 md:mt-0 space-x-3">
+        <!-- Inscrever‑se (apenas aluno não inscrito) -->
         <button
+          v-if="user && isStudent && !isSubscribed"
+          @click="subscribe"
           class="bg-white text-blue-800 font-semibold px-5 py-2 rounded-lg hover:bg-blue-100 transition"
         >
           Inscrever-se
         </button>
+        <!-- Sair da comunidade (apenas aluno inscrito) -->
         <button
+          v-if="user && isStudent && isSubscribed"
+          @click="unsubscribe"
+          class="bg-red-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-red-700 transition"
+        >
+          Sair da comunidade
+        </button>
+        <!-- + Postar (todo aluno OU monitor dono) -->
+        <button
+          v-if="user && (isStudent || (user.role === 'monitor' && user.id === community.creator.id))"
+          @click="goToCreatePost"
           class="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           + Postar
@@ -144,11 +158,34 @@
 
 <script setup>
 import { defineProps } from 'vue'
+import { router } from '@inertiajs/vue3'
 
 const props = defineProps({
-  community: {
-    type: Object,
-    required: true
-  }
+  community:    { type: Object, required: true },
+  user:         { type: Object, required: false, default: null },
+  isSubscribed: { type: Boolean, required: false, default: false },
 })
+
+// apenas quem é aluno
+const isStudent = props.user?.role === 'student'
+
+function subscribe() {
+  router.post(
+    `/communities/${props.community.id}/subscribe`,
+    {},
+    { preserveScroll: true }
+  )
+}
+
+function unsubscribe() {
+  router.delete(
+    `/communities/${props.community.id}/unsubscribe`,
+    {},
+    { preserveScroll: true }
+  )
+}
+
+function goToCreatePost() {
+  router.get(`/communities/${props.community.id}/posts/create`)
+}
 </script>

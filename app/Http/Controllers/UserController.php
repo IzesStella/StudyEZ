@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Inertia\Inertia; 
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -65,4 +67,18 @@ class UserController extends Controller
 
         return response()->json(null, 204);
     }
+
+    public function dashboard()
+{
+    /** @var \App\Models\User $user */
+    $user = auth()->user();
+
+    // traz só as comunidades nas quais o aluno se inscreveu
+    $communities = $user->communities()->with('creator')->get();
+
+    return Inertia::render('DashboardAluno', [
+        'communities' => $communities,
+    ]);
+}
+
 }
