@@ -5,12 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\Community;
 use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
-    // Listar todos os posts de uma comunidade
+    public function __construct()
+    {
+        // obriga estar logado em todas as ações deste controller
+        $this->middleware('auth');
+    }
+
+    /**
+     * Listar todos os posts de uma comunidade (público).
+     */
     public function index($communityId)
     {
         $community = Community::findOrFail($communityId);
@@ -19,75 +25,71 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
-    // Criar um novo post (por monitor)
+    /**
+     * Mostrar um post específico (público).
+     */
+    public function show($id)
+    {
+        $post = Post::with(['user', 'community'])->findOrFail($id);
+        return response()->json($post);
+    }
+
+    /**
+     * Criar novo post:
+     * - Alunos podem em qualquer comunidade.
+     * - Monitores apenas nas próprias.
+     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'nullable|string',
-            'image_path' => 'nullable|url',
+        $data = $request->validate([
+            'title'        => 'required|string|max:255',
+            'content'      => 'nullable|string',
+            'image_path'   => 'nullable|url',
             'community_id' => 'required|exists:communities,id',
         ]);
 
-        // Para fins acadêmicos, usuário fixo
-        $user = User::find(2);
+        $community = Community::findOrFail($data['community_id']);
+        // Policy::create → recebe (User, Community)
+        $this->authorize('create', [$community]);
 
-        $post = new Post($validated);
-        $post->user_id = $user->id;
+        $post = new Post($data);
+        $post->user_id      = $request->user()->id;
+        $post->community_id = $community->id;
         $post->save();
 
         return response()->json($post, 201);
     }
 
-    // Mostrar um post específico
-    public function show($id)
-    {
-        $post = Post::with(['user', 'community'])->findOrFail($id);
-
-        return response()->json($post);
-    }
-
-    // Atualizar um post (somente se for o autor)
+    /**
+     * Atualizar post (só monitor dono da comunidade).
+     */
     public function update(Request $request, $id)
     {
         $post = Post::findOrFail($id);
-        $user = Auth::user();
 
-        if (!$user) {
-            return response()->json(['message' => 'Usuário não autenticado.'], 401);
-        }
+        $this->authorize('update', $post);
 
-        if ($post->user_id !== $user->id) {
-            return response()->json(['message' => 'Você não tem permissão para editar esse post.'], 403);
-        }
-
-        $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'content' => 'nullable|string',
+        $data = $request->validate([
+            'title'      => 'sometimes|string|max:255',
+            'content'    => 'nullable|string',
             'image_path' => 'nullable|url',
         ]);
 
-        $post->update($validated);
+        $post->update($data);
 
         return response()->json($post);
     }
 
-    // Deletar um post (somente se for o autor)
+    /**
+     * Deletar post (só monitor dono da comunidade).
+     */
     public function destroy($id)
     {
         $post = Post::findOrFail($id);
 
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['message' => 'Usuário não autenticado.'], 401);
-        }
-
-        if ($post->user_id !== $user->id) {
-            return response()->json(['message' => 'Você não tem permissão para deletar esse post.'], 403);
-        }
+        $this->authorize('delete', $post);
 
         $post->delete();
-
         return response()->json(['message' => 'Post deletado com sucesso.'], 200);
     }
 }

@@ -1,0 +1,41 @@
+<?php
+// app/Policies/CommentPolicy.php
+
+namespace App\Policies;
+
+use App\Models\Comment;
+use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
+
+class CommentPolicy
+{
+    use HandlesAuthorization;
+
+    /**
+     * Criação de comentário:
+     * só alunos podem comentar em qualquer post.
+     */
+    public function create(User $user): bool
+    {
+        return $user->role === 'student';
+    }
+
+    /**
+     * Atualização de comentário:
+     * só o próprio autor (aluno) pode editar.
+     */
+    public function update(User $user, Comment $comment): bool
+    {
+        return $user->role === 'student'
+            && $comment->user_id === $user->id;
+    }
+
+    /**
+     * Exclusão de comentário:
+     * só o próprio autor (aluno) pode excluir.
+     */
+    public function delete(User $user, Comment $comment): bool
+    {
+        return $this->update($user, $comment);
+    }
+}

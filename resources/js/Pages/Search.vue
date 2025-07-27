@@ -27,8 +27,9 @@
               <h2 class="text-xl font-bold mb-1">{{ comm.name }}</h2>
               <p class="text-sm">Monitor: {{ comm.creator.name }}</p>
             </div>
-            <Link
-              :href="route('community.page', { id: comm.id })"
+            <!-- Pega o ID certo na comunidade correta -->
+           <Link
+            :href="route('community.page', comm.id)"
               class="self-end mt-4 bg-white text-blue-800 font-semibold px-4 py-2 rounded hover:bg-gray-100 transition"
             >
               Entrar
