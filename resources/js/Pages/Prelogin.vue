@@ -1,7 +1,6 @@
 <template>
-  <MainLayout>
-    <div class="prelogin-container">
-      <SideBar />
+  <div class="prelogin-container">
+    <SideBar />
 
       <div class="main-content">
         <!-- Top Bar -->
@@ -62,7 +61,6 @@
         </section>
       </div>
     </div>
-  </MainLayout>
 </template>
 
 <script setup>

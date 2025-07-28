@@ -3,12 +3,16 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { Link, useForm, usePage, router } from '@inertiajs/vue3';
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 const props = defineProps({
     mustVerifyEmail: Boolean,
     status: String,
 });
+
+const emit = defineEmits(['success']);
 
 const user = usePage().props.auth.user;
 
@@ -16,6 +20,24 @@ const form = useForm({
     name: user.name,
     email: user.email,
 });
+
+const updateProfile = () => {
+    form.patch(route('profile.update'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Perfil atualizado com sucesso!');
+            emit('success');
+            // Aguarda um pouco antes de navegar para mostrar o toast
+            setTimeout(() => {
+                router.visit(route('profile.show'));
+            }, 1000);
+        },
+        onError: (errors) => {
+            console.log('Erros:', errors);
+            toast.error('Erro ao atualizar perfil');
+        }
+    });
+};
 </script>
 
 <template>
@@ -28,7 +50,7 @@ const form = useForm({
             </p>
         </header>
 
-        <form @submit.prevent="form.patch(route('profile.update'))" class="mt-6 space-y-6">
+        <form @submit.prevent="updateProfile" class="mt-6 space-y-6">
             <div>
                 <InputLabel for="name" value="Name" />
 
@@ -91,3 +113,24 @@ const form = useForm({
         </form>
     </section>
 </template>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+section {
+    font-family: 'Montserrat', sans-serif;
+}
+
+section h2 {
+    color: #135572;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+section p {
+    color: #6B7280;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+}
+</style>

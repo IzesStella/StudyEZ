@@ -1,13 +1,21 @@
 <script setup>
 import { ref } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { usePage, useForm, router } from '@inertiajs/vue3'
+import { toast } from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
 
 const { props } = usePage()
 const user = props.auth.user
 
 const selectedFile = ref(null)
-const previewUrl = ref(user.avatar || '/images/default-avatar.png')
+const previewUrl = ref(user.profile_photo ? `/storage/${user.profile_photo}` : '/images/default-avatar.svg')
 const fileInput = ref(null)
+const isUploading = ref(false)
+
+// Form para upload da foto
+const form = useForm({
+    photo: null,
+})
 
 function selectFile() {
     fileInput.value.click()
@@ -16,7 +24,20 @@ function selectFile() {
 function handleFileSelect(event) {
     const file = event.target.files[0]
     if (file) {
+        // Validar tamanho do arquivo (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('A imagem deve ter no máximo 2MB')
+            return
+        }
+
+        // Validar tipo do arquivo
+        if (!file.type.startsWith('image/')) {
+            toast.error('Por favor, selecione apenas arquivos de imagem')
+            return
+        }
+
         selectedFile.value = file
+        form.photo = file
         
         // Criar preview da imagem
         const reader = new FileReader()
@@ -29,15 +50,44 @@ function handleFileSelect(event) {
 
 function removePhoto() {
     selectedFile.value = null
-    previewUrl.value = '/images/default-avatar.png'
+    form.photo = null
+    previewUrl.value = user.profile_photo ? `/storage/${user.profile_photo}` : '/images/default-avatar.svg'
     if (fileInput.value) {
         fileInput.value.value = ''
     }
 }
 
+function savePhoto() {
+    if (!selectedFile.value) {
+        toast.error('Selecione uma foto antes de salvar')
+        return
+    }
+
+    isUploading.value = true
+
+    form.post(route('profile.avatar'), {
+        onSuccess: () => {
+            toast.success('Foto de perfil atualizada com sucesso!')
+            selectedFile.value = null
+            // Navegar para a página de perfil para mostrar a nova foto
+            setTimeout(() => {
+                router.visit(route('profile.show'))
+            }, 1000)
+        },
+        onError: (errors) => {
+            toast.error('Erro ao atualizar foto de perfil')
+            console.error(errors)
+        },
+        onFinish: () => {
+            isUploading.value = false
+        }
+    })
+}
+
 defineExpose({
     selectedFile,
-    removePhoto
+    removePhoto,
+    savePhoto
 })
 </script>
 
@@ -59,6 +109,16 @@ defineExpose({
             <div class="avatar-actions">
                 <button type="button" class="upload-btn" @click="selectFile">
                     Escolher Foto
+                </button>
+                <button 
+                    type="button" 
+                    class="save-btn" 
+                    @click="savePhoto" 
+                    v-if="selectedFile"
+                    :disabled="isUploading"
+                >
+                    <span v-if="isUploading">Salvando...</span>
+                    <span v-else>Salvar Foto</span>
                 </button>
                 <button type="button" class="remove-btn" @click="removePhoto" v-if="selectedFile">
                     Remover
@@ -148,7 +208,7 @@ defineExpose({
     gap: 8px;
 }
 
-.upload-btn, .remove-btn {
+.upload-btn, .save-btn, .remove-btn {
     padding: 8px 16px;
     border: none;
     border-radius: 8px;
@@ -167,6 +227,22 @@ defineExpose({
 .upload-btn:hover {
     background: #e68900;
     transform: translateY(-1px);
+}
+
+.save-btn {
+    background: #135572;
+    color: white;
+}
+
+.save-btn:hover:not(:disabled) {
+    background: #25608A;
+    transform: translateY(-1px);
+}
+
+.save-btn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .remove-btn {

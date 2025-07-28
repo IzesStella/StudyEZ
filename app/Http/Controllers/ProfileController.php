@@ -37,7 +37,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.show')->with('status', 'profile-updated');
     }
 
     /**
@@ -77,14 +77,14 @@ class ProfileController extends Controller
             $path = $photo->store('profile_photos', 'public');
 
             // Delete old avatar if exists
-            if ($user->profile_photo_path) {
-                \Storage::disk('public')->delete($user->profile_photo_path);
+            if ($user->profile_photo) {
+                \Storage::disk('public')->delete($user->profile_photo);
             }
 
-            $user->profile_photo_path = $path;
+            $user->profile_photo = $path;
             $user->save();
         }
 
-        return Redirect::route('profile.edit')->with('status', 'profile-photo-updated');
+        return Redirect::route('profile.show')->with('status', 'profile-photo-updated');
     }
 }

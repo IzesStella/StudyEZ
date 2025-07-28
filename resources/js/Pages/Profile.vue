@@ -21,7 +21,7 @@ function goToEdit() {
   <div class="dashboard-layout">
     <component :is="sidebarComponent" @open-create-community="showCreateCommunity = true" />
     <div class="profile-page">
-        <img class="profile-avatar" :src="user.avatar || '/images/default-avatar.png'" alt="Avatar" />
+        <img class="profile-avatar" :src="user.avatar || user.profile_photo ? `/storage/${user.profile_photo}` : '/images/default-avatar.svg'" alt="Avatar" />
         <div class="profile-info">
           <h2>{{ user.name }}</h2>
           <p>Email: {{ user.email }}</p>

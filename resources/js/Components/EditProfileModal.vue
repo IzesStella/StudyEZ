@@ -19,6 +19,11 @@ const avatarUploadRef = ref(null)
 function closeModal() {
     emit('close')
 }
+
+function handleFormSuccess() {
+    // Fechar modal quando algum formulário for salvo com sucesso
+    closeModal()
+}
 </script>
 
 <template>
@@ -40,12 +45,13 @@ function closeModal() {
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
+                        @success="handleFormSuccess"
                     />
                 </div>
 
                 <!-- Alterar Senha -->
                 <div class="form-section">
-                    <UpdatePasswordForm />
+                    <UpdatePasswordForm @success="handleFormSuccess" />
                 </div>
 
                 <!-- Deletar Conta -->
@@ -90,7 +96,7 @@ function closeModal() {
     justify-content: space-between;
     align-items: center;
     padding: 24px 28px;
-    background: linear-gradient(135deg, #135572 0%, #25608A 100%);
+    background:#b0d5ff;
     color: white;
 }
 

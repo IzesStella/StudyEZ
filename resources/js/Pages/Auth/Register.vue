@@ -3,7 +3,6 @@ import { useForm, router, usePage } from '@inertiajs/vue3'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import { watch } from 'vue'
-import CorujaImg from '@/assets/images/CorujaSEMFUNDO.png'
 
 // Verifica se já está logado, se sim redireciona direto pro dashboard
 const auth = usePage().props.auth

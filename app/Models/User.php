@@ -17,7 +17,6 @@ class User extends Authenticatable
         'password',
         'role',
         'profile_photo',
-        'bio',
     ];
 
     protected $hidden = [
@@ -48,5 +47,11 @@ class User extends Authenticatable
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+
+    // Accessor para a foto de perfil
+    public function getAvatarAttribute()
+    {
+        return $this->profile_photo ? "/storage/{$this->profile_photo}" : '/images/default-avatar.svg';
     }
 }

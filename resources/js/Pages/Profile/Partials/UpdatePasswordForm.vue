@@ -3,8 +3,12 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 import { ref } from 'vue';
+
+const emit = defineEmits(['success']);
 
 const passwordInput = ref(null);
 const currentPasswordInput = ref(null);
@@ -18,8 +22,17 @@ const form = useForm({
 const updatePassword = () => {
     form.put(route('password.update'), {
         preserveScroll: true,
-        onSuccess: () => form.reset(),
+        onSuccess: () => {
+            form.reset();
+            toast.success('Senha atualizada com sucesso!');
+            emit('success');
+            // Aguarda um pouco antes de navegar para mostrar o toast
+            setTimeout(() => {
+                router.visit(route('profile.show'));
+            }, 1000);
+        },
         onError: () => {
+            toast.error('Erro ao atualizar senha');
             if (form.errors.password) {
                 form.reset('password', 'password_confirmation');
                 passwordInput.value.focus();
