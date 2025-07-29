@@ -54,4 +54,9 @@ class User extends Authenticatable
     {
         return $this->profile_photo ? "/storage/{$this->profile_photo}" : '/images/default-avatar.svg';
     }
+
+    public function planners()
+{
+    return $this->hasMany(Planner::class);
+}
 }
