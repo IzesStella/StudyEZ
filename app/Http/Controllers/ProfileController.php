@@ -25,6 +25,16 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the user's profile.
+     */
+    public function show(Request $request): Response
+    {
+        return Inertia::render('Profile', [
+            'user' => $request->user()->only(['id', 'name', 'email', 'role', 'profile_photo', 'bio']),
+        ]);
+    }
+
+    /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse

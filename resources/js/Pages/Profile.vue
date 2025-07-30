@@ -26,6 +26,9 @@ function goToEdit() {
           <h2>{{ user.name }}</h2>
           <p>Email: {{ user.email }}</p>
           <p>Tipo: {{ user.role }}</p>
+          <!-- Debug: mostra se bio existe -->
+          <p v-if="user.bio">Bio: {{ user.bio }}</p>
+          <p v-else class="no-bio">Nenhuma bio adicionada ainda.</p>
           <button class="edit-btn" @click="goToEdit">Editar Perfil</button>
         </div>
       <PlannerBar />

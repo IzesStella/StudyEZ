@@ -19,6 +19,7 @@ const user = usePage().props.auth.user;
 const form = useForm({
     name: user.name,
     email: user.email,
+    bio: user.bio || '',
 });
 
 const updateProfile = () => {
@@ -82,6 +83,22 @@ const updateProfile = () => {
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
+            <div>
+                <InputLabel for="bio" value="Bio" />
+
+                <textarea
+                    id="bio"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    v-model="form.bio"
+                    rows="3"
+                    maxlength="500"
+                    placeholder="Conte um pouco sobre você..."
+                ></textarea>
+
+                <InputError class="mt-2" :message="form.errors.bio" />
+                <p class="mt-1 text-sm text-gray-500">{{ form.bio ? form.bio.length : 0 }}/500 caracteres</p>
+            </div>
+
             <div v-if="props.mustVerifyEmail && user.email_verified_at === null">
                 <p class="text-sm mt-2 text-gray-800">
                     Your email address is unverified.
@@ -132,5 +149,11 @@ section p {
     color: #6B7280;
     font-family: 'Montserrat', sans-serif;
     font-size: 0.9rem;
+}
+
+textarea {
+    font-family: 'Montserrat', sans-serif !important;
+    resize: vertical;
+    min-height: 80px;
 }
 </style>
