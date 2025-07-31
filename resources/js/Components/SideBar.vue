@@ -36,7 +36,7 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
 .sidebar {
-  width: 100px;
+  width: 75px;
   background-color: #B0D5FF;
   display: flex;
   flex-direction: column;
@@ -53,7 +53,7 @@ export default {
 }
 
 .small-logo {
-  width: 85px;
+  width: 60px;
   margin-bottom: 20px;
   margin-top: 30px;
 }
@@ -75,12 +75,12 @@ nav {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   background-color: #B0D5FF;
   border: none;
   border-radius: 50%;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   cursor: pointer;
   margin-bottom: 10px;
   transition: all 0.2s ease-in-out;

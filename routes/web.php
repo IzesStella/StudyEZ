@@ -63,6 +63,8 @@ Route::middleware('auth')->group(function () {
          ->name('search');
     Route::get('/communities', [CommunityController::class, 'explore'])
          ->name('communities.explore');
+    Route::get('/my-communities', [CommunityController::class, 'myCommunitiesApi'])
+         ->name('communities.mine');
     Route::get('/community/{id}', [CommunityController::class, 'page'])
          ->name('community.page');
     Route::post('/communities', [CommunityController::class, 'store'])

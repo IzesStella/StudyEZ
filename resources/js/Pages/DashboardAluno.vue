@@ -39,16 +39,22 @@ function logout() {
       </div>
 
       <div v-else class="communities-container">
-        <h2 class="section-title">Minhas Comunidades</h2>
         <div class="card-grid">
           <div
             v-for="community in communities"
             :key="community.id"
             class="community-card"
           >
-            <h3>{{ community.name }}</h3>
-            <p>Criada por: {{ community.creator.name }}</p>
-            <!-- adicione outras infos aqui -->
+            <div>
+              <h3 class="community-name">{{ community.name }}</h3>
+              <p class="community-monitor">Monitor: {{ community.creator.name }}</p>
+            </div>
+            <a
+              :href="route('community.page', community.id)"
+              class="enter-button"
+            >
+              Entrar
+            </a>
           </div>
         </div>
       </div>
@@ -135,11 +141,51 @@ function logout() {
 }
 
 .community-card {
-  background-color: #ffffff;
-  border: 1px solid #ccc;
-  padding: 15px 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  width: 300px;
+  background: #1e40af;
+  color: white;
+  border-radius: 12px;
+  padding: 24px 20px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 130px;
+  width: 320px;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.community-card:hover {
+  background: #1e3a8a;
+  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.22);
+}
+.community-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: white;
+}
+.community-monitor {
+  font-size: 0.95rem;
+  margin: 0 0 8px 0;
+  color: #c7d2fe;
+}
+.enter-button {
+  background: white;
+  color: #1e40af;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  align-self: flex-end;
+  margin-top: 12px;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 1px 4px rgba(30, 64, 175, 0.08);
+}
+.enter-button:hover {
+  background: #f1f5f9;
+  color: #1e3a8a;
 }
 </style>

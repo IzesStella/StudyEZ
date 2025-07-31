@@ -9,13 +9,25 @@
 
       <!-- Se o monitor tiver comunidades, mostra elas -->
       <div v-if="communities.length > 0" class="communities-list">
-        <h2>Suas Comunidades:</h2>
-        <ul>
-          <li v-for="community in communities" :key="community.id" class="community-item">
-            <strong>{{ community.name }}</strong><br />
-            <small>{{ community.description }}</small>
-          </li>
-        </ul>
+        <div class="communities-grid">
+          <div
+            v-for="community in communities"
+            :key="community.id"
+            class="community-card"
+          >
+            <div>
+              <h3 class="community-name">{{ community.name }}</h3>
+              <p class="community-description">{{ community.description }}</p>
+              <p class="community-monitor">Monitor: {{ community.creator?.name || 'Você' }}</p>
+            </div>
+            <button
+              class="enter-button"
+              @click="goToCommunity(community.id)"
+            >
+              Gerenciar
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Se não tiver comunidade, mostra a imagem e balão -->
@@ -52,7 +64,8 @@ const communities = ref([])
 // Busca comunidades ao carregar a tela
 const fetchCommunities = async () => {
   try {
-    const response = await axios.get('/communities')
+    const response = await axios.get('/my-communities')
+    console.log('Minhas comunidades:', response.data)
     communities.value = response.data
   } catch (error) {
     toast.error('Erro ao carregar comunidades.')
@@ -78,11 +91,15 @@ function logout() {
     onError: () => toast.error('Não foi possível sair.'),
   })
 }
+
+function goToCommunity(communityId) {
+  router.visit(route('community.page', communityId))
+}
 </script>
 
 <style scoped>
 .main-content {
-  margin-left: 100px; 
+  margin-left: 80px; 
   padding: 20px;
   font-family: 'Montserrat', sans-serif;
 }
@@ -123,7 +140,7 @@ function logout() {
 
 .balloon {
   max-width: 450px;
-  margin: 42px 0 0 100px;
+  margin: 42px 0 0 80px;
   background: #e3f0ff;
   color: #002F66;
   font-family: 'Montserrat', sans-serif;
@@ -148,16 +165,86 @@ function logout() {
 
 /* Lista de comunidades */
 .communities-list {
-  margin-left: 100px;
+  margin-left: 80px;
   margin-top: 32px;
   font-family: 'Montserrat', sans-serif;
 }
 
-.community-item {
-  background: #f7f9ff;
-  border-left: 5px solid #002f66;
-  padding: 12px 18px;
-  margin-bottom: 12px;
+.communities-list h2 {
+  color: #002F66;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+
+.communities-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.community-card {
+  background: #1e40af;
+  color: white;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+  width: 340px;
+  height: 140px;
+  margin-bottom: 20px;
+}
+
+.community-card:hover {
+  background: #1e3a8a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.3);
+}
+
+.community-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: white;
+}
+
+.community-description {
+  font-size: 0.9rem;
+  margin: 0 0 4px 0;
+  color: #e0e7ff;
+  line-height: 1.3;
+}
+
+.community-monitor {
+  font-size: 0.8rem;
+  margin: 0;
+  color: #c7d2fe;
+}
+
+.enter-button {
+  background: white;
+  color: #1e40af;
+  font-weight: 600;
+  padding: 8px 16px;
   border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Montserrat', sans-serif;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  align-self: flex-end;
+  margin-left: 0;
+}
+
+.enter-button:hover {
+  background: #f1f5f9;
+  transform: translateY(-1px);
 }
 </style>

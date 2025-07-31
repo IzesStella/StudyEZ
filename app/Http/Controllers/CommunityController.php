@@ -123,6 +123,18 @@ class CommunityController extends Controller
     }
 
     /**
+     * Retorna apenas as comunidades do monitor logado (para dashboard)
+     */
+    public function myCommunitiesApi()
+    {
+        $communities = Community::with('creator')
+            ->where('user_id', auth()->id())
+            ->get();
+        
+        return response()->json($communities);
+    }
+
+    /**
      * Busca comunidades por nome (Inertia)
      */
     public function search(Request $request)
