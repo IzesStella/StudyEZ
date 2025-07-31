@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-5xl mx-auto p-6">
+    <CreatePostModal v-if="showCreatePostModal" @close="showCreatePostModal = false" />
     <!-- Banner da Comunidade -->
     <div
       class="bg-blue-800 text-white rounded-lg p-6 flex flex-col md:flex-row justify-between items-start md:items-center mb-8"
@@ -30,7 +31,7 @@
         <!-- + Postar (todo aluno OU monitor dono) -->
         <button
           v-if="user && (isStudent || (user.role === 'monitor' && user.id === community.creator.id))"
-          @click="goToCreatePost"
+          @click="showCreatePostModal = true"
           class="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           + Postar
@@ -157,8 +158,9 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
+import CreatePostModal from '@/Components/CreatePostModal.vue'
 
 const props = defineProps({
   community:    { type: Object, required: true },
@@ -166,8 +168,8 @@ const props = defineProps({
   isSubscribed: { type: Boolean, required: false, default: false },
 })
 
-// apenas quem é aluno
 const isStudent = props.user?.role === 'student'
+const showCreatePostModal = ref(false)
 
 function subscribe() {
   router.post(
@@ -183,9 +185,5 @@ function unsubscribe() {
     {},
     { preserveScroll: true }
   )
-}
-
-function goToCreatePost() {
-  router.get(`/communities/${props.community.id}/posts/create`)
 }
 </script>
