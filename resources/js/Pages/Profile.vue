@@ -6,6 +6,7 @@ import CreateCommunity from '@/Components/CreateCommunity.vue'
 import EditProfileModal from '@/Components/EditProfileModal.vue'
 import { usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import LogoStudyEZ from '@/Components/LogoStudyEZ.vue'
 
 const user = usePage().props.auth.user
 const sidebarComponent = user.role === 'monitor' ? SideBarMonitor : SideBar
@@ -18,11 +19,17 @@ function goToEdit() {
 </script>
 
 <template>
+  <LogoStudyEZ />
   <div class="dashboard-layout">
     <component :is="sidebarComponent" @open-create-community="showCreateCommunity = true" />
     <div class="profile-page">
       <div class="profile-container">
-        <img class="profile-avatar" :src="user.avatar || user.profile_photo ? `/storage/${user.profile_photo}` : '/images/default-avatar.svg'" alt="Avatar" />
+        <template v-if="user.profile_photo">
+          <img class="profile-avatar" :src="`/storage/${user.profile_photo}`" alt="Avatar" />
+        </template>
+        <template v-else>
+          <font-awesome-icon :icon="['fas', 'user']" class="profile-avatar-icon" />
+        </template>
         <div class="profile-info">
           <div class="profile-header">
             <h2>{{ user.name }}</h2>
@@ -80,6 +87,20 @@ function goToEdit() {
   border: 4px solid #b0d5ff;
   box-shadow: 0 8px 16px rgba(176, 213, 255, 0.3);
   flex-shrink: 0;
+}
+
+.profile-avatar-icon {
+  font-size: 160px;
+  color: #b0d5ff;
+  border-radius: 20px;
+  border: 4px solid #b0d5ff;
+  box-shadow: 0 8px 16px rgba(176, 213, 255, 0.3);
+  background: #fff;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-info {

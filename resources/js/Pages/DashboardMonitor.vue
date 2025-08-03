@@ -1,10 +1,10 @@
 <template>
+  <LogoStudyEZ />
   <div class="dashboard-layout">
     <SideBar @open-create-community="showCreateCommunity = true" />
     <main class="main-content">
       <header class="header">
         <h1>O que você deseja ensinar hoje?</h1>
-        <button class="logout-btn" @click="logout">Sair</button>
       </header>
 
       <!-- Se o monitor tiver comunidades, mostra elas -->
@@ -57,6 +57,7 @@ import { router } from '@inertiajs/vue3'
 import axios from 'axios'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
+import LogoStudyEZ from '@/Components/LogoStudyEZ.vue'
 
 const showCreateCommunity = ref(false)
 const communities = ref([])
@@ -82,15 +83,7 @@ function handleCloseCreateCommunity() {
   fetchCommunities() // Recarrega comunidades após criar uma nova
 }
 
-function logout() {
-  router.post(route('logout'), {
-    onSuccess: () => {
-      toast.info('Você saiu com sucesso.')
-      router.replace({ name: 'prelogin' })
-    },
-    onError: () => toast.error('Não foi possível sair.'),
-  })
-}
+
 
 function goToCommunity(communityId) {
   router.visit(route('community.page', communityId))

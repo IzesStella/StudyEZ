@@ -11,20 +11,25 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy/dist/vue.m';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
   faHome,
+  faSearch,
   faUser,
   faTableCellsLarge,
   faPlus,
+  faCommentDots,
+  faSignOutAlt,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-// — Adicione aqui todos os ícones que vai usar no seu projeto
+// ícones utilizados no projeto
 library.add(
   faHome,
+  faSearch,
   faUser,
   faTableCellsLarge,
   faPlus,
-  // se precisar de outros ícones, importe e adicione aqui:
-  // faBell, faLock, etc.
+  faCommentDots,
+  faSignOutAlt,
+  
 );
 
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';

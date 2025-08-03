@@ -1,4 +1,5 @@
 <template>
+  <LogoStudyEZ />
   <div class="prelogin-container">
     <SideBar />
 
@@ -66,6 +67,7 @@
 <script setup>
 import { router } from '@inertiajs/vue3'
 import SideBar from '../Components/SideBar.vue'
+import LogoStudyEZ from '@/Components/LogoStudyEZ.vue'
 
 // Navegação pura — middleware guest resolve quem está logado
 function goToRegister() {

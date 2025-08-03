@@ -4,6 +4,7 @@ import SideBar from '@/Components/SideBar.vue'
 import PlannerBar from '@/Components/PlannerBar.vue'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
+import LogoStudyEZ from '@/Components/LogoStudyEZ.vue'
 
 defineProps({
   communities: Array
@@ -21,6 +22,7 @@ function logout() {
 </script>
 
 <template>
+  <LogoStudyEZ />
   <div class="dashboard-layout">
     <SideBar />
     <main class="main-content">

@@ -1,34 +1,66 @@
 <template>
   <div class="sidebar">
-    <img src="/images/StudyEZ.png" alt="StudyEZ Logo" class="logo small-logo" />
     <nav>
       <div class="nav-buttons">
         <!-- Casinha -->
         <button class="nav-button" @click="goToRoute('/dashboard')">
-          <font-awesome-icon :icon="['fas', 'home']" style="color: #FF9500;" />
+          <font-awesome-icon :icon="['fas', 'home']" style="color: #e3971c;" />
         </button>
         <!--  lupa -->
-        <button class="nav-button" @click="goToRoute('/search')" style="color: #FF9500;">
+        <button class="nav-button" @click="goToRoute('/search')" style="color: #e3971c;">
           <font-awesome-icon :icon="['fas', 'search']" />
+        </button>
+        <!-- Chat -->
+        <button class="nav-button" style="color: #e3971c;">
+          <font-awesome-icon :icon="['fas', 'comment-dots']" />
         </button>
       </div>
       <!-- Perfil -->
       <button class="nav-button profile-button" @click="goToRoute('/profile')">
-        <font-awesome-icon :icon="['fas', 'user']" class="profile-icon" style="color: #FF9500;"/>
+        <template v-if="user.profile_photo">
+          <img
+            :src="`/storage/${user.profile_photo}`"
+            alt="Avatar"
+            class="profile-avatar-btn"
+          />
+        </template>
+        <template v-else>
+          <font-awesome-icon :icon="['fas', 'user']" class="profile-icon" style="color: #e3971c;" />
+        </template>
+      </button>
+      <!-- Sair -->
+      <button class="nav-button logout-button" @click="logout">
+        <font-awesome-icon :icon="['fas','sign-out-alt']" style="color: #e3971c;" />
       </button>
     </nav>
   </div>
 </template>
 
 <script>
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
+import { toast } from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
 
 export default {
+  computed: {
+    user() {
+      return usePage().props.auth.user;
+    }
+  },
   methods: {
     goToRoute(route) {
       router.visit(route);
     },
-  },
+    logout() {
+      router.post(route('logout'), {
+        onSuccess: () => {
+          toast.info('Você saiu com sucesso.')
+          router.replace({ name: 'prelogin' })
+        },
+        onError: () => toast.error('Não foi possível sair.'),
+      })
+    }
+  }
 };
 </script>
 
@@ -36,20 +68,20 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
 .sidebar {
-  width: 75px;
+  position: fixed;
+  top: 25%; 
+  left: 0;
+  width: 50px;
+  height: 50%;          
+  margin: 0;         
   background-color: #B0D5FF;
+  border-top-right-radius: 35px;
+  border-bottom-right-radius: 35px;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px 0;
-  top: 0;
-  left: 0;
-  margin-bottom: 15px;
-  position: fixed;
-  height: 100%;
-  margin: 0%;
-  border-top-right-radius: 50px;     
-  border-bottom-right-radius: 50px; 
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); 
 }
 
 .small-logo {
@@ -97,6 +129,22 @@ nav {
 
 .profile-icon {
   color: #CE9E10;
+}
+.sidebar-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 12px auto;
+  border: 2px solid #ce7b07;
+  background: #fff;
+}
+
+.profile-avatar-btn {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e3971c;
+  background: #fff;
 }
 
 @media (max-width: 1024px) {

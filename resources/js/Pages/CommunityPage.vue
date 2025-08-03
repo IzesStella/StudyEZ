@@ -1,5 +1,7 @@
 <template>
+  <LogoStudyEZ />
   <div class="max-w-5xl mx-auto p-6">
+    <component :is="sidebarComponent" @open-create-community="showCreateCommunity = true" />
     <CreatePostModal v-if="showCreatePostModal" @close="showCreatePostModal = false" />
     <!-- Banner da Comunidade -->
     <div
@@ -158,9 +160,16 @@
 </template>
 
 <script setup>
+
+import PlannerBar from '@/Components/PlannerBar.vue'
+import SideBar from '@/Components/SideBar.vue'
+import SideBarMonitor from '@/Components/SideBarMonitor.vue'
+import CreateCommunity from '@/Components/CreateCommunity.vue'
+import { usePage } from '@inertiajs/vue3'
 import { defineProps, ref } from 'vue'
-import { router } from '@inertiajs/vue3'
 import CreatePostModal from '@/Components/CreatePostModal.vue'
+import { router } from '@inertiajs/vue3'
+import LogoStudyEZ from '@/Components/LogoStudyEZ.vue'
 
 const props = defineProps({
   community:    { type: Object, required: true },
@@ -168,6 +177,8 @@ const props = defineProps({
   isSubscribed: { type: Boolean, required: false, default: false },
 })
 
+const sidebarComponent = props.user?.role === 'monitor' ? SideBarMonitor : SideBar
+const showCreateCommunity = ref(false)
 const isStudent = props.user?.role === 'student'
 const showCreatePostModal = ref(false)
 

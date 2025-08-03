@@ -1,4 +1,5 @@
 <template>
+  <LogoStudyEZ />
   <div class="dashboard-layout">
     <component :is="sidebarComponent" @open-create-community="showCreateCommunity = true" />
     <div class="search-page">
@@ -53,6 +54,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { usePage, useForm, Link } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import LogoStudyEZ from '@/Components/LogoStudyEZ.vue'
 
 library.add(faSearch)
 
