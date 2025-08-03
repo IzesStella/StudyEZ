@@ -10,15 +10,6 @@ defineProps({
   communities: Array
 })
 
-function logout() {
-  router.post(route('logout'), {
-    onSuccess: () => {
-      toast.info('Você saiu com sucesso.')
-      router.replace({ name: 'prelogin' })
-    },
-    onError: () => toast.error('Não foi possível sair.'),
-  })
-}
 </script>
 
 <template>
@@ -28,7 +19,6 @@ function logout() {
     <main class="main-content">
       <header class="header">
         <h1>O que você deseja aprender hoje?</h1>
-        <button class="logout-btn" @click="logout">Sair</button>
       </header>
 
       <div v-if="communities.length === 0">
