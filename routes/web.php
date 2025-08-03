@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\PlannerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,6 +56,15 @@ Route::middleware('auth')->group(function () {
          ->name('dashboard.aluno');
     Route::get('/dashboard-monitor', fn() => Inertia::render('DashboardMonitor'))
          ->name('dashboard.monitor');
+
+             //
+    // ➤  rotas do Planner
+    //
+    Route::get('/planner',  [\App\Http\Controllers\PlannerController::class, 'show'])
+         ->name('planner.show');
+    Route::post('/planner', [\App\Http\Controllers\PlannerController::class, 'store'])
+         ->name('planner.store');
+         
 
     //
     // 3) Comunidades: buscar, explorar, ver, criar (monitor)
