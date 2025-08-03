@@ -143,7 +143,7 @@ defineExpose({
 <style scoped>
 .avatar-upload h3 {
     margin: 0 0 16px 0;
-    color: #135572;
+    color: #111;
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
     font-size: 1.1rem;
@@ -158,12 +158,12 @@ defineExpose({
 
 .avatar-preview {
     position: relative;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+    border-radius: 10px;
     overflow: hidden;
     cursor: pointer;
-    border: 3px solid #B0D5FF;
+    border: 3px solid #FF9500;
     transition: all 0.3s ease;
 }
 
@@ -211,7 +211,7 @@ defineExpose({
 .upload-btn, .save-btn, .remove-btn {
     padding: 8px 16px;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
     font-size: 0.9rem;
@@ -220,12 +220,12 @@ defineExpose({
 }
 
 .upload-btn {
-    background: #FF9500;
-    color: white;
+    background: #75B6FF;
+    color: rgb(0, 0, 0);
 }
 
 .upload-btn:hover {
-    background: #e68900;
+    background: #75B6FF;
     transform: translateY(-1px);
 }
 

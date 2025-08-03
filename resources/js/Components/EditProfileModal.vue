@@ -34,28 +34,28 @@ function handleFormSuccess() {
                 <button class="close-btn" @click="closeModal">&times;</button>
             </div>
             
-            <div class="modal-body">
-                <!-- Seção de Upload de Avatar -->
-                <div class="form-section">
+            <div class="modal-body column-layout">
+                <!-- Foto de Perfil -->
+                <div class="profile-section profile-photo">
                     <AvatarUpload ref="avatarUploadRef" />
-                </div>
 
-                <!-- Informações do Perfil -->
-                <div class="form-section">
+                </div>
+                <!-- Informações de Perfil -->
+                <div class="profile-section profile-info">
+
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
                         @success="handleFormSuccess"
                     />
                 </div>
-
                 <!-- Alterar Senha -->
-                <div class="form-section">
+                <div class="profile-section profile-password">
                     <UpdatePasswordForm @success="handleFormSuccess" />
                 </div>
+                <!-- Remover Conta -->
+                <div class="remove-account-row">
 
-                <!-- Deletar Conta -->
-                <div class="form-section">
                     <DeleteUserForm />
                 </div>
             </div>
@@ -93,19 +93,23 @@ function handleFormSuccess() {
 
 .modal-header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
     padding: 24px 28px;
-    background:#b0d5ff;
+    background: #b0d5ff;
     color: white;
+    position: relative;
 }
 
 .modal-header h2 {
-    margin: 0;
+    margin: 0 auto;
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
     font-size: 1.5rem;
-    color: white;
+    color: #002F66;
+    text-align: center;
+    flex: 1;
 }
 
 .close-btn {
@@ -122,6 +126,9 @@ function handleFormSuccess() {
     justify-content: center;
     border-radius: 50%;
     transition: all 0.3s ease;
+    position: absolute;
+    right: 28px;
+    top: 24px;
 }
 
 .close-btn:hover {
@@ -129,28 +136,75 @@ function handleFormSuccess() {
     transform: rotate(90deg);
 }
 
-.modal-body {
-    padding: 28px;
+
+
+.modal-body.column-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 0 0 0;
     max-height: calc(85vh - 120px);
     overflow-y: auto;
+    gap: 18px;
 }
-
-.form-section {
-    margin-bottom: 24px;
-    padding: 20px;
-    background: #F8FBFF;
-    border-radius: 12px;
-    border: 1px solid #E0F0FF;
-    transition: all 0.3s ease;
-}
-
-.form-section:hover {
-    border-color: #B0D5FF;
-    box-shadow: 0 4px 12px rgba(19, 85, 114, 0.08);
-}
-
-.form-section:last-child {
+.profile-section {
+    width: 100%;
+    max-width: 370px;
     margin-bottom: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 0 0 0;
+}
+.profile-section h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #222;
+}
+.profile-photo {
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+}
+.avatar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+    align-items: flex-end;
+    width: 100%;
+}
+.btn-alt, .btn-save {
+    background: #93c5fd;
+    color: #1e293b;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 14px;
+    margin-bottom: 2px;
+    cursor: pointer;
+    width: 90px;
+    text-align: center;
+}
+.btn-save {
+    background: #60a5fa;
+}
+.remove-account-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-top: 24px;
+    gap: 12px;
+    width: 100%;
+}
+.remove-account-row span {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #111;
 }
 
 /* Scrollbar personalizada */

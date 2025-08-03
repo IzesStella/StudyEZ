@@ -49,65 +49,151 @@ const updatePassword = () => {
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">Update Password</h2>
-
-            <p class="mt-1 text-sm text-gray-600">
-                Ensure your account is using a long, random password to stay secure.
-            </p>
+            <h2>Alterar Senha</h2>
         </header>
-
-        <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
-            <div>
-                <InputLabel for="current_password" value="Current Password" />
-
+        <form @submit.prevent="updatePassword">
+            <div class="form-group">
+                <InputLabel for="current_password" value="Senha Atual" />
                 <TextInput
                     id="current_password"
                     ref="currentPasswordInput"
                     v-model="form.current_password"
                     type="password"
-                    class="mt-1 block w-full"
                     autocomplete="current-password"
                 />
-
-                <InputError :message="form.errors.current_password" class="mt-2" />
+                <InputError :message="form.errors.current_password" />
             </div>
-
-            <div>
-                <InputLabel for="password" value="New Password" />
-
+            <div class="form-group">
+                <InputLabel for="password" value="Nova Senha" />
                 <TextInput
                     id="password"
                     ref="passwordInput"
                     v-model="form.password"
                     type="password"
-                    class="mt-1 block w-full"
                     autocomplete="new-password"
                 />
-
-                <InputError :message="form.errors.password" class="mt-2" />
+                <InputError :message="form.errors.password" />
             </div>
-
-            <div>
-                <InputLabel for="password_confirmation" value="Confirm Password" />
-
+            <div class="form-group">
+                <InputLabel for="password_confirmation" value="Confirmar Nova Senha" />
                 <TextInput
                     id="password_confirmation"
                     v-model="form.password_confirmation"
                     type="password"
-                    class="mt-1 block w-full"
                     autocomplete="new-password"
                 />
-
-                <InputError :message="form.errors.password_confirmation" class="mt-2" />
+                <InputError :message="form.errors.password_confirmation" />
             </div>
-
-            <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
-
-                <Transition enter-from-class="opacity-0" leave-to-class="opacity-0" class="transition ease-in-out">
-                    <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">Saved.</p>
+            <div class="form-actions">
+                <PrimaryButton :disabled="form.processing">Salvar</PrimaryButton>
+                <Transition enter-from-class="opacity-0" leave-to-class="opacity-0" class="transition-fade">
+                    <p v-if="form.recentlySuccessful" class="saved-msg">Salvo.</p>
                 </Transition>
             </div>
         </form>
     </section>
 </template>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+section {
+    font-family: 'Montserrat', sans-serif;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+section header {
+    width: 100%;
+    margin-bottom: 8px;
+}
+section h2 {
+    color: #111;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+}
+section p {
+    color: #111;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.97rem;
+    margin-bottom: 0;
+}
+.form-group {
+    width: 100%;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group textarea {
+    width: 100%;
+    min-width: 350px;
+    max-width: 700px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    padding: 4px 14px;
+    font-size: 1.12rem;
+    font-family: 'Montserrat', sans-serif;
+    background: #fff;
+    margin-top: 4px;
+    margin-bottom: 0;
+    box-sizing: border-box;
+    outline: none;
+    transition: border 0.2s;
+}
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus,
+.form-group textarea:focus {
+    border: 1.5px solid #60a5fa;
+}
+.form-group textarea {
+    resize: none;
+    min-height: 38px;
+    max-height: 120px;
+}
+.form-actions {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 2px;
+}
+.form-actions button,
+.form-actions .PrimaryButton {
+    background: #93c5fd;
+    color: #222;
+    border: none;
+    border-radius: 3px;
+    padding: 0 14px;
+    height: 36px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: none;
+    margin-left: auto;
+    margin-right: 0;
+    transition: background 0.2s;
+}
+.form-actions button:active,
+.form-actions button:focus,
+.form-actions button:hover {
+    background: #60a5fa;
+}
+.saved-msg {
+    color: #444;
+    font-size: 0.97rem;
+    margin-left: 8px;
+}
+.transition-fade {
+    transition: opacity 0.2s;
+}
+</style>
