@@ -7,7 +7,6 @@
     <div v-if="isOpen" class="content">
       <h2 class="titulo">Seu Planner</h2>
 
-      <!-- Calendário agora com a lógica de data e destaque corrigida -->
       <v-calendar
         :attributes="calendarAttributes"
         locale="pt-BR"
@@ -46,12 +45,13 @@
 import { ref, computed, watch } from 'vue';
 import { Calendar as VCalendar } from 'v-calendar';
 import 'v-calendar/style.css';
-import { format, toDate } from 'date-fns';
+// Adicionado 'isValid' para a verificação de datas
+import { format, parseISO, isValid } from 'date-fns';
 import { utcToZonedTime } from 'date-fns-tz';
 
 const isOpen = ref(false);
 const note = ref('');
-const selectedDate = ref('');
+const selectedDate = ref(''); // Inicializado como string vazia
 const isLoading = ref(false);
 const isSaving = ref(false);
 const showSuccessMessage = ref(false);
@@ -65,17 +65,20 @@ function onDateSelect(day) {
   const zonedDate = utcToZonedTime(day.date, userTimeZone);
   const dateString = format(zonedDate, 'yyyy-MM-dd');
 
+  // Evita reprocessar se a data já estiver selecionada
   if (selectedDate.value === dateString) return;
   selectedDate.value = dateString;
 }
 
 watch(selectedDate, async (dateString) => {
+  // Se não há data selecionada, limpa a nota e sai
   if (!dateString) {
     note.value = '';
     return;
   }
+  
   isLoading.value = true;
-  note.value = '';
+  note.value = ''; // Limpa a nota enquanto carrega
 
   try {
     const response = await fetch(`/planner?date=${dateString}`, {
@@ -83,12 +86,15 @@ watch(selectedDate, async (dateString) => {
     });
     if (!response.ok) throw new Error(`Erro ao buscar nota: ${response.status}`);
     const data = await response.json();
+    
+    // Garante que a nota carregada corresponde à data ainda selecionada
     if (selectedDate.value === dateString) {
       note.value = data.note || '';
     }
   } catch (error) {
     console.error('Falha ao carregar a nota:', error);
   } finally {
+    // Garante que isLoading seja falso apenas se a data ainda for a mesma
     if (selectedDate.value === dateString) {
       isLoading.value = false;
     }
@@ -97,6 +103,7 @@ watch(selectedDate, async (dateString) => {
 
 async function saveNote() {
   const dateString = selectedDate.value;
+  // Não salva se não há data selecionada ou se já está salvando
   if (!dateString || isSaving.value) return;
 
   isSaving.value = true;
@@ -127,10 +134,10 @@ async function saveNote() {
     }
 
     const data = await response.json();
-    note.value = data.note;
+    note.value = data.note; // Atualiza a nota com o que o servidor retornou (pode ser útil para confirmação)
 
     showSuccessMessage.value = true;
-    setTimeout(() => { showSuccessMessage.value = false; }, 3000);
+    setTimeout(() => { showSuccessMessage.value = false; }, 3000); // Esconde a mensagem após 3 segundos
 
   } catch (error) {
     console.error('Erro ao salvar nota:', error);
@@ -139,20 +146,32 @@ async function saveNote() {
   }
 }
 
+// PROPRIEDADE COMPUTADA COM A CORREÇÃO
 const calendarAttributes = computed(() => {
-  if (!selectedDate.value) return [];
+  // 1. Se selectedDate.value for uma string vazia, retorna um array vazio.
+  // Isso evita que parseISO receba uma string vazia e crie um objeto de data inválido.
+  if (!selectedDate.value) {
+    return [];
+  }
 
-  const dateForCalendar = toDate(selectedDate.value, { timeZone: 'UTC' });
+  const dateForCalendar = parseISO(selectedDate.value);
+
+  // 2. Adiciona uma verificação extra com isValid para garantir que a data parseada seja realmente válida.
+  // Se não for, também retorna um array vazio.
+  if (!isValid(dateForCalendar)) {
+    console.warn('Data inválida detectada para o calendário:', selectedDate.value);
+    return [];
+  }
 
   return [{
     key: 'selected',
     highlight: {
       style: {
-        backgroundColor: 'transparent', // Garantir que o fundo azul seja removido
-        border: '2px solid #135572',     // Borda azul ao invés de fundo azul
+        backgroundColor: 'transparent',
+        border: '2px solid #135572',
       },
       contentStyle: {
-        color: '#135572',  // Cor do número do dia 
+        color: '#135572',
       }
     },
     dates: dateForCalendar,
@@ -161,6 +180,7 @@ const calendarAttributes = computed(() => {
 </script>
 
 <style scoped>
+/* ESTILOS CSS - NENHUMA ALTERAÇÃO AQUI */
 .success-notification {
   position: absolute;
   bottom: 20px;
@@ -178,17 +198,15 @@ const calendarAttributes = computed(() => {
   pointer-events: none;
 }
 
-/* Remover o fundo azul do dia selecionado no calendário */
 .vc-day.selected {
-  background-color: transparent !important; /* Removendo o fundo azul */
-  border: 2px solid #135572 !important; /* Adicionando borda ao dia selecionado */
-  color: #135572 !important; /* Definindo a cor do número do dia */
+  background-color: transparent !important;
+  border: 2px solid #135572 !important;
+  color: #135572 !important;
 }
 
-/* Alterar o fundo do dia quando o cursor passar sobre ele */
 .vc-day:hover {
-  background-color: transparent !important; /* Removendo o fundo azul do hover */
-  color: #135572 !important; /* Definindo a cor do número do dia no hover */
+  background-color: transparent !important;
+  color: #135572 !important;
 }
 
 @keyframes fadeInOut {
@@ -203,7 +221,8 @@ const calendarAttributes = computed(() => {
   top: 0;
   right: 0;
   height: 100vh;
-  background: transparent; /* Removido o fundo azul */
+  /* Cor atualizada para #B0D5FF */
+  background: #B0D5FF;
   box-shadow: -2px 0 10px rgba(0,0,0,0.07);
   border-top-left-radius: 32px;
   border-bottom-left-radius: 32px;
@@ -254,6 +273,7 @@ const calendarAttributes = computed(() => {
   opacity: 1;
   transition: opacity 0.3s ease-in-out;
   overflow: hidden;
+  background-color: transparent;
 }
 
 .planner-bar:not(.open) .content {
@@ -341,11 +361,11 @@ const calendarAttributes = computed(() => {
   border: none;
   border-radius: 8px;
   width: 100%;
-  background-color: transparent; /* Removido o fundo azul do calendário */
+  background-color: transparent;
 }
 
 .custom-calendar .vc-day {
-  background-color: transparent; /* Removido o fundo azul dos dias */
+  background-color: transparent;
 }
 
 .save-btn {
