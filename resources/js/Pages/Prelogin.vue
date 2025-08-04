@@ -1,72 +1,71 @@
 <template>
   <LogoStudyEZ />
   <div class="prelogin-container">
-    <SideBar />
-
-      <div class="main-content">
-        <!-- Top Bar -->
-        <div class="top-bar">
-          <div class="auth-options">
-            <p>Não tem uma conta ainda?</p>
-            <button @click="goToRegister" class="btn secondary">
-              CADASTRE-SE
-            </button>
-          </div>
-          <div class="auth-options">
-            <p>Já é cadastrado?</p>
-            <button @click="goToLogin" class="btn primary">
-              ENTRAR
-            </button>
-          </div>
+    <!-- SideBar removido -->
+    <div class="main-content">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="auth-options">
+          <p>Não tem uma conta ainda?</p>
+          <button @click="goToRegister" class="btn secondary">
+            CADASTRE-SE
+          </button>
         </div>
-
-        <!-- Banner -->
-        <div class="banner">
-          <img
-            src="/images/Banner.png"
-            alt="Banner StudyEZ"
-            class="banner-image"
-          />
+        <div class="auth-options">
+          <p>Já é cadastrado?</p>
+          <button @click="goToLogin" class="btn primary">
+            ENTRAR
+          </button>
         </div>
-
-        <!-- FAQ -->
-        <section class="faq">
-          <h2>FAQ - COMO FUNCIONA NOSSO SITE?</h2>
-          <div class="faq-item">
-            <h3>O QUE É O STUDYEZ?</h3>
-            <p>
-              O StudyEZ é uma plataforma de monitorias online onde alunos podem
-              receber ajuda em diversas matérias, tirar dúvidas e organizar seus
-              estudos de forma eficiente.
-            </p>
-          </div>
-
-          <div class="faq-item">
-            <h3>COMO POSSO ENCONTRAR UMA MONITORIA?</h3>
-            <p>
-              Você pode navegar pelas comunidades e se unir a elas. Cada
-              comunidade possui um título com a matéria relacionada, uma
-              breve descrição e um botão para saber mais e dentro dela tem o
-              espaço de perguntas e respostas.
-            </p>
-          </div>
-
-          <div class="faq-item">
-            <h3>O QUE É O PLANNER DO SITE?</h3>
-            <p>
-              O planner é uma ferramenta integrada ao aplicativo que permite
-              organizar seus estudos. Você pode anotar tarefas e adicionar
-              lembretes diários.
-            </p>
-          </div>
-        </section>
       </div>
+
+      <!-- Banner -->
+      <div class="banner">
+        <img
+          src="/images/Banner.png"
+          alt="Banner StudyEZ"
+          class="banner-image"
+        />
+      </div>
+
+      <!-- FAQ -->
+      <section class="faq">
+        <h2>FAQ - COMO FUNCIONA NOSSO SITE?</h2>
+        <div class="faq-item">
+          <h3>O QUE É O STUDYEZ?</h3>
+          <p>
+            O StudyEZ é uma plataforma de monitorias online onde alunos podem
+            receber ajuda em diversas matérias, tirar dúvidas e organizar seus
+            estudos de forma eficiente.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3>COMO POSSO ENCONTRAR UMA MONITORIA?</h3>
+          <p>
+            Você pode navegar pelas comunidades e se unir a elas. Cada
+            comunidade possui um título com a matéria relacionada, uma
+            breve descrição e um botão para saber mais e dentro dela tem o
+            espaço de perguntas e respostas.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3>O QUE É O PLANNER DO SITE?</h3>
+          <p>
+            O planner é uma ferramenta integrada ao aplicativo que permite
+            organizar seus estudos. Você pode anotar tarefas e adicionar
+            lembretes diários.
+          </p>
+        </div>
+      </section>
     </div>
+  </div>
 </template>
 
 <script setup>
 import { router } from '@inertiajs/vue3'
-import SideBar from '../Components/SideBar.vue'
+
 import LogoStudyEZ from '@/Components/LogoStudyEZ.vue'
 
 // Navegação pura — middleware guest resolve quem está logado
