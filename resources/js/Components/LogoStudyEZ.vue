@@ -5,7 +5,7 @@
 <style scoped>
 .study-ez-logo {
   position: fixed;
-  top: 8%;
+  top: 5%;
   left: 2%;
   width: 70px;
   height: auto;
