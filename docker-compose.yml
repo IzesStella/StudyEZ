@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: studyez_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bancostudy
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    volumes:
+      - studyez_db_data:/var/lib/mysql
+    networks:
+      - studyez_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: studyez_app
+    container_name: studyez_app
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - studyez_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Vite para hot reload
+  vite:
+    build: 
+      context: .
+      dockerfile: Dockerfile.vite
+    container_name: studyez_vite
+    restart: unless-stopped
+    command: npm run dev -- --host 0.0.0.0
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "5173:5173"
+    networks:
+      - studyez_network
+
+  web:
+    image: nginx:stable-alpine
+    container_name: studyez_web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/:ro
+    networks:
+      - studyez_network
+    depends_on:
+      - app
+
+volumes:
+  studyez_db_data:
+    driver: local
+  studyez_storage:
+    driver: local
+  studyez_uploads:
+    driver: local
+
+networks:
+  studyez_network:
+    driver: bridge
