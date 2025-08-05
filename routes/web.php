@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PlannerController;
+use App\Http\Controllers\PostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,10 +61,10 @@ Route::middleware('auth')->group(function () {
              //
     // ➤  rotas do Planner
     //
-    Route::get('/planner',  [\App\Http\Controllers\PlannerController::class, 'show'])
-         ->name('planner.show');
-    Route::post('/planner', [\App\Http\Controllers\PlannerController::class, 'store'])
-         ->name('planner.store');
+    Route::get('/planner', [PlannerController::class, 'show'])
+    ->name('planner.show');
+Route::post('/planner', [PlannerController::class, 'store'])
+    ->name('planner.store');
          
 
     //
@@ -79,6 +80,10 @@ Route::middleware('auth')->group(function () {
          ->name('community.page');
     Route::post('/communities', [CommunityController::class, 'store'])
          ->name('communities.store');
+
+     // Rota para criar um novo post
+           Route::post('/communities/{community}/posts', [PostController::class, 'store'])
+               ->name('posts.store');
 
     //
     // 4) Inscrição e cancelamento (aluno apenas)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Community;
+use App\Models\Post; 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -161,41 +162,48 @@ class CommunityController extends Controller
         $isSubscribed = $user
             ? $community->users->contains($user->id)
             : false;
+        
+        // 3) Carrega os posts da comunidade
+        $posts = Post::with('user') // Carrega os dados do usuário de cada post
+            ->where('community_id', $community->id)
+            ->latest() // Ordena pelos mais recentes
+            ->get();
 
         return Inertia::render('CommunityPage', [
             'community'    => $community,
             'user'         => $user,
             'isSubscribed' => $isSubscribed,
+            'posts'        => $posts, // 4) Passe a lista de posts para o frontend
         ]);
     }
 
     public function subscribe($id)
-{
-    $community = Community::findOrFail($id);
-    $this->authorize('join', $community);
+    {
+        $community = Community::findOrFail($id);
+        $this->authorize('join', $community);
 
-    $user = auth()->user();
-    if (! $community->users->contains($user)) {
-        $community->users()->attach($user->id);
+        $user = auth()->user();
+        if (! $community->users->contains($user)) {
+            $community->users()->attach($user->id);
+        }
+
+        return redirect()->route('community.page', $community->id)
+                         ->with('success', 'Inscrito com sucesso!');
     }
 
-     return redirect()->route('community.page', $community->id)
-                     ->with('success', 'Inscrito com sucesso!');
-}
+    public function unsubscribe($id)
+    {
+        $community = Community::findOrFail($id);
+        $this->authorize('join', $community);
 
-public function unsubscribe($id)
-{
-    $community = Community::findOrFail($id);
-    $this->authorize('join', $community);
+        $user = auth()->user();
+        if ($community->users->contains($user)) {
+            $community->users()->detach($user->id);
+        }
 
-    $user = auth()->user();
-    if ($community->users->contains($user)) {
-        $community->users()->detach($user->id);
+        // volta para a mesma página
+        return redirect()->route('community.page', $community->id)
+                         ->with('success', 'Você saiu da comunidade.');
     }
-
-      // volta para a mesma página
-    return redirect()->route('community.page', $community->id)
-                     ->with('success', 'Você saiu da comunidade.');
-}
 
 }

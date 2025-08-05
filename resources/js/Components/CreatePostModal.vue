@@ -14,16 +14,30 @@
               @click="triggerFileInput"
             >
               <span class="plus-icon">+</span>
-              <!-- Pré-visualização das imagens pode ser adicionada aqui -->
             </div>
           </div>
           <div class="modal-col">
-            <label>Mensagem</label>
-            <textarea v-model="message" class="message-textarea" />
+            <label for="post-title">Título</label>
+            <input
+              id="post-title"
+              type="text"
+              v-model="form.title"
+              class="message-textarea mb-4"
+              placeholder="Digite o título do seu post..."
+            />
+            <label for="post-content">Mensagem</label>
+            <textarea
+              id="post-content"
+              v-model="form.content"
+              class="message-textarea"
+              placeholder="Digite o conteúdo do seu post..."
+            />
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn-postar">Postar</button>
+          <button type="submit" class="btn-postar" :disabled="form.processing">
+            Postar
+          </button>
           <button type="button" @click="$emit('close')" class="btn-cancelar">Cancelar</button>
         </div>
       </form>
@@ -32,27 +46,44 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-const message = ref('')
-const fileInput = ref(null)
+import { ref } from 'vue';
+import { useForm, router } from '@inertiajs/vue3';
+
+const props = defineProps({
+  community: { type: Object, required: true },
+});
+
+const emit = defineEmits(['close']);
+
+const form = useForm({
+  title: '',
+  content: '',
+  community_id: props.community.id,
+});
+
+const fileInput = ref(null);
 
 function triggerFileInput() {
-  fileInput.value && fileInput.value.click()
+  fileInput.value && fileInput.value.click();
 }
 
 function handleFiles(event) {
-  // Aqui você pode tratar os arquivos selecionados
+  // Lógica para lidar com o upload de arquivos pode ser implementada aqui
 }
 
 function submit() {
-  // Lógica para enviar o post
-  // ...
-  // Fechar modal após postar (opcional)
-  // $emit('close')
+  form.post(route('posts.store', { community: props.community.id }), {
+    onSuccess: () => {
+      form.reset(); // Limpa o formulário
+      emit('close'); // Fecha o modal
+    },
+    preserveScroll: true,
+  });
 }
 </script>
 
 <style scoped>
+/* Seu estilo CSS permanece o mesmo */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -60,12 +91,12 @@ function submit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.3);
 }
 .modal-content {
   background: #fff;
   border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(30,64,175,0.18);
+  box-shadow: 0 8px 32px rgba(30, 64, 175, 0.18);
   padding: 32px;
   max-width: 600px;
   width: 100%;
@@ -136,7 +167,7 @@ function submit() {
   padding: 10px;
   font-size: 1rem;
   resize: vertical;
-  box-shadow: 0 1px 4px rgba(30,64,175,0.08);
+  box-shadow: 0 1px 4px rgba(30, 64, 175, 0.08);
 }
 .modal-footer {
   display: flex;

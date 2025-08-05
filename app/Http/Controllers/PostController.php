@@ -39,26 +39,25 @@ class PostController extends Controller
      * - Alunos podem em qualquer comunidade.
      * - Monitores apenas nas próprias.
      */
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'title'        => 'required|string|max:255',
-            'content'      => 'nullable|string',
-            'image_path'   => 'nullable|url',
-            'community_id' => 'required|exists:communities,id',
-        ]);
+   public function store(Request $request, Community $community)
+{
+    $data = $request->validate([
+        'title'      => 'required|string|max:255',
+        'content'    => 'nullable|string',
+        'image_path' => 'nullable|url',
+    ]);
+    
+    $this->authorize('create', [Post::class, $community]);
 
-        $community = Community::findOrFail($data['community_id']);
-        // Policy::create → recebe (User, Community)
-        $this->authorize('create', [$community]);
+    $post = new Post($data);
+    $post->user_id = $request->user()->id;
+    $post->community_id = $community->id;
+    $post->save();
 
-        $post = new Post($data);
-        $post->user_id      = $request->user()->id;
-        $post->community_id = $community->id;
-        $post->save();
-
-        return response()->json($post, 201);
-    }
+    // SOLUÇÃO: Redirecione de volta para a página da comunidade
+    return redirect()->route('community.page', $community->id)
+                     ->with('success', 'Post criado com sucesso!');
+}
 
     /**
      * Atualizar post (só monitor dono da comunidade).
