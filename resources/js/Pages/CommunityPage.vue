@@ -34,7 +34,7 @@
           @click="unsubscribe"
           class="bg-red-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-red-700 transition"
         >
-          Sair da comunidade
+          Desinscrever-se
         </button>
         
         <button
@@ -43,6 +43,13 @@
           class="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           + Postar
+        </button>
+
+        <button
+          v-if="user && (isStudent)"
+          class="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          Iniciar Chat
         </button>
       </div>
     </div>

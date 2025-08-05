@@ -6,7 +6,7 @@
     ></div>
 
     <div class="relative bg-white rounded-lg shadow-xl max-w-sm w-full">
-      <div class="bg-blue-800 text-white p-4 rounded-t-lg flex justify-between items-center">
+      <div class="bg-[#b0d5ff] text-white p-4 rounded-t-lg flex justify-between items-center">
         <h2 class="text-xl font-bold">Atenção!</h2>
         <button @click="$emit('close')" class="text-white hover:text-yellow-400">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
