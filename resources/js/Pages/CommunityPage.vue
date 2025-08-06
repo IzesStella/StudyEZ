@@ -13,6 +13,14 @@
       :community="community"
     />
 
+    <!-- O NOVO MODAL DE COMENTÁRIOS -->
+    <CommentModal
+      v-if="showCommentModal"
+      @close="showCommentModal = false"
+      @comment-added="handleCommentAdded"
+      :post="selectedPostForComment"
+    />
+
     <div
       class="bg-blue-800 text-white rounded-lg p-6 flex flex-col md:flex-row justify-between items-start md:items-center mb-8"
     >
@@ -55,10 +63,10 @@
     </div>
 
     <div>
-      <div v-if="posts.length === 0" class="text-center text-gray-500 py-10">
+      <div v-if="localPosts.length === 0" class="text-center text-gray-500 py-10">
         Nenhum post ainda. Seja o primeiro a postar!
       </div>
-      <div v-else v-for="post in posts" :key="post.id" class="border-b border-gray-200 pb-6 mb-6">
+      <div v-else v-for="post in localPosts" :key="post.id" class="border-b border-gray-200 pb-6 mb-6">
         <div class="flex items-center mb-2">
           <div
             class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
@@ -85,7 +93,10 @@
         </div>
         <h2 class="text-xl font-semibold mb-2">{{ post.title }}</h2>
         <p class="text-gray-700 mb-4">{{ post.content }}</p>
+        
+        <!-- BOTÃO DE COMENTÁRIOS - AGORA ABRE O MODAL -->
         <button
+          @click="openCommentModal(post)"
           class="flex items-center text-gray-500 hover:text-gray-700 transition"
         >
           <svg
@@ -102,58 +113,111 @@
               d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8-1.446 0-2.813-.253-4.033-.707L3 20l1.293-4.657C3.253 14.813 3 13.446 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
             />
           </svg>
-          <span>Comentários</span>
+          <span>Comentários ({{ post.comments ? post.comments.length : 0 }})</span>
         </button>
+
+        <!-- LISTA DE COMENTÁRIOS PARA ESTE POST -->
+        <div v-if="post.comments && post.comments.length > 0" class="ml-12 mt-4 space-y-3">
+          <div v-for="comment in post.comments" :key="comment.id" class="flex items-start">
+            <div
+              class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gray-500"
+            >
+              {{ comment.user.name.charAt(0) }}
+            </div>
+            <div class="ml-3 bg-gray-100 rounded-lg p-3 flex-grow">
+              <p class="font-semibold text-gray-800">{{ comment.user.name }}</p>
+              <p class="text-gray-700">{{ comment.content }}</p>
+              <p class="text-xs text-gray-500 mt-1">{{ new Date(comment.created_at).toLocaleString() }}</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
-
 <script setup>
 import PlannerBar from '@/Components/PlannerBar.vue'
 import SideBar from '@/Components/SideBar.vue'
 import SideBarMonitor from '@/Components/SideBarMonitor.vue'
 import CreateCommunity from '@/Components/CreateCommunity.vue'
-import { usePage, router } from '@inertiajs/vue3'
-import { defineProps, ref } from 'vue'
 import CreatePostModal from '@/Components/CreatePostModal.vue'
 import LogoStudyEZ from '@/Components/LogoStudyEZ.vue'
 import WarningModal from '@/Components/WarningModal.vue'
+import CommentModal from '@/Components/CommentModal.vue'
+
+import { defineProps, ref, watch } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+import axios from 'axios'     // ← Import do axios
 
 const props = defineProps({
   community: { type: Object, required: true },
   user: { type: Object, required: false, default: null },
   isSubscribed: { type: Boolean, required: false, default: false },
   posts: { type: Array, required: true, default: () => [] },
-});
+})
+
+const localPosts = ref([...props.posts])
+watch(() => props.posts, newPosts => {
+  localPosts.value = [...newPosts]
+}, { deep: true, immediate: true })
+
+const showCommentModal = ref(false)
+const selectedPostForComment = ref(null)
 
 const sidebarComponent = props.user?.role === 'monitor' ? SideBarMonitor : SideBar
 const showCreateCommunity = ref(false)
 const isStudent = props.user?.role === 'student'
 const showCreatePostModal = ref(false)
-const showWarningModal = ref(false);
+const showWarningModal = ref(false)
 
 function subscribe() {
-  router.post(
-    `/communities/${props.community.id}/subscribe`,
-    {},
-    { preserveScroll: true }
-  )
+  router.post(`/communities/${props.community.id}/subscribe`, {}, { preserveScroll: true })
 }
-
 function unsubscribe() {
-  router.delete(
-    `/communities/${props.community.id}/unsubscribe`,
-    {},
-    { preserveScroll: true }
-  )
+  router.delete(`/communities/${props.community.id}/unsubscribe`, {}, { preserveScroll: true })
 }
-
 function handlePostClick() {
   if (props.user.role === 'student' && !props.isSubscribed) {
-    showWarningModal.value = true;
+    showWarningModal.value = true
   } else {
-    showCreatePostModal.value = true;
+    showCreatePostModal.value = true
   }
+}
+function openCommentModal(post) {
+  selectedPostForComment.value = post
+  showCommentModal.value = true
+}
+
+// NOVO: função que busca todos os comentários de um post lá no backend
+async function reloadComments(postId) {
+  try {
+    const res = await axios.get(`/posts/${postId}/comments`) // ajuste a URL conforme sua rota showThread
+    const updated = res.data    // array de comentários vindo do controller
+    const idx = localPosts.value.findIndex(p => p.id === postId)
+    if (idx !== -1) {
+      localPosts.value[idx] = {
+        ...localPosts.value[idx],
+        comments: updated
+      }
+    }
+  }
+  catch (e) {
+    console.error('Erro ao recarregar comentários:', e)
+  }
+}
+
+// handleCommentAdded agora dispara o reload completo da thread
+async function handleCommentAdded(newComment) {
+  // você ainda pode inserir localmente, se quiser feedback imediato
+  const postIndex = localPosts.value.findIndex(p => p.id === newComment.post_id)
+  if (postIndex !== -1) {
+    // opcional: adiciona imediatamente
+    localPosts.value[postIndex].comments = [
+      ...(localPosts.value[postIndex].comments || []),
+      newComment
+    ]
+  }
+  // e então recarrega toda a thread do servidor
+  await reloadComments(newComment.post_id)
 }
 </script>

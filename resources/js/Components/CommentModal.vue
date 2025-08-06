@@ -60,28 +60,27 @@ const submitComment = async () => {
   errorMessage.value = '';
 
   try {
-    // A rota que definimos no web.php e o controller já esperam o postId na URL
+    // The route defined in web.php and the controller already expect the postId in the URL
     const response = await axios.post(`/posts/${props.post.id}/comments`, {
       content: newCommentContent.value,
     });
 
-    // Emite o evento para o componente pai (CommunityPage) com o novo comentário
+    // Emits the event to the parent component (CommunityPage) with the new comment
     emit('comment-added', response.data);
     
-    // Limpa o campo e fecha o modal
+    // Clears the form field and closes the modal
     newCommentContent.value = '';
     emit('close');
 
   } catch (error) {
-    console.error('Erro ao postar comentário:', error);
+    console.error('Error posting comment:', error);
     if (error.response && error.response.data && error.response.data.message) {
       errorMessage.value = error.response.data.message;
     } else {
-      errorMessage.value = 'Ocorreu um erro ao enviar o comentário. Tente novamente.';
+      errorMessage.value = 'An error occurred while sending the comment. Please try again.';
     }
   } finally {
     isLoading.value = false;
   }
 };
 </script>
-

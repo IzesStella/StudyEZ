@@ -151,7 +151,7 @@ class CommunityController extends Controller
     /**
      * Página de comunidade específica (Inertia)
      */
-    public function page($id)
+     public function page($id)
     {
         $community = Community::with('creator', 'users')->findOrFail($id);
 
@@ -164,16 +164,21 @@ class CommunityController extends Controller
             : false;
         
         // 3) Carrega os posts da comunidade
-        $posts = Post::with('user') // Carrega os dados do usuário de cada post
+        // AGORA INCLUINDO OS COMENTÁRIOS E OS USUÁRIOS DOS COMENTÁRIOS
+        $posts = Post::with(['user', 'comments' => function($query) {
+                $query->whereNull('parent_id') // Apenas comentários de nível superior
+                      ->with('user') // Carrega o usuário que fez o comentário
+                      ->orderBy('created_at', 'asc'); // Ordena os comentários por data
+            }])
             ->where('community_id', $community->id)
-            ->latest() // Ordena pelos mais recentes
+            ->latest() // Ordena os posts pelos mais recentes
             ->get();
 
         return Inertia::render('CommunityPage', [
-            'community'    => $community,
-            'user'         => $user,
-            'isSubscribed' => $isSubscribed,
-            'posts'        => $posts, // 4) Passe a lista de posts para o frontend
+            'community'     => $community,
+            'user'          => $user,
+            'isSubscribed'  => $isSubscribed,
+            'posts'         => $posts, // 4) Passa a lista de posts para o frontend
         ]);
     }
 

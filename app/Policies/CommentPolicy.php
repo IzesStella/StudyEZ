@@ -15,9 +15,10 @@ class CommentPolicy
      * Criação de comentário:
      * só alunos podem comentar em qualquer post.
      */
-    public function create(User $user): bool
+     public function create(User $user): bool
     {
-        return $user->role === 'student';
+        // Permite criar comentários se o usuário for 'student' OU 'monitor'
+        return $user->role === 'student' || $user->role === 'monitor';
     }
 
     /**

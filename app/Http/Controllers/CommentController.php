@@ -13,23 +13,26 @@ class CommentController extends Controller
     }
 
     /**
-     * Criar comentário (só aluno).
+     * Criar comentário (só aluno ou monitor).
+     * O post_id agora é recebido da URL.
      */
-    public function store(Request $request)
+    public function store(Request $request, $postId)
     {
         $this->authorize('create', Comment::class);
 
         $data = $request->validate([
-            'post_id' => 'required|exists:posts,id',
             'content' => 'required|string',
         ]);
 
         $comment = Comment::create([
             'user_id'   => $request->user()->id,
-            'post_id'   => $data['post_id'],
+            'post_id'   => $postId,
             'content'   => $data['content'],
             'parent_id' => null,
         ]);
+
+        // Carrega o relacionamento 'user' no comentário recém-criado
+        $comment->load('user'); // <-- ADICIONADO: Carrega os dados do usuário
 
         return response()->json($comment, 201);
     }
@@ -50,6 +53,9 @@ class CommentController extends Controller
             'content'   => $data['content'],
             'parent_id' => $parent->id,
         ]);
+
+        // Carrega o relacionamento 'user' na resposta recém-criada
+        $reply->load('user'); // <-- ADICIONADO: Carrega os dados do usuário
 
         return response()->json($reply, 201);
     }

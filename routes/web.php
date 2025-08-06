@@ -9,6 +9,7 @@ use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PlannerController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\CommentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -93,7 +94,15 @@ Route::post('/planner', [PlannerController::class, 'store'])
     Route::delete('/communities/{id}/unsubscribe',[CommunityController::class, 'unsubscribe'])
          ->name('communities.unsubscribe');
 
-    //
+    
+    // Rota para listar os comentários de um post específico
+    Route::get('/posts/{postId}/comments', [CommentController::class, 'showThread'])
+        ->name('comments.showThread');
+
+    // Rota para criar um novo comentário para um post
+    Route::post('/posts/{postId}/comments', [CommentController::class, 'store'])
+        ->name('comments.store');
+   
     // 5) Perfil e logout
     //
     Route::get('/profile',         fn() => Inertia::render('Profile'))
