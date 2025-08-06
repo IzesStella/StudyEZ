@@ -26,8 +26,8 @@
         <textarea
           v-model="note"
           :disabled="isLoading"
-          :placeholder="isLoading ? 'Carregando...' : 'Escreva suas anotações aqui...'">
-        </textarea>
+          :placeholder="isLoading ? 'Carregando...' : 'Escreva suas anotações aqui...'"
+        ></textarea>
 
         <button class="save-btn" @click="saveNote" :disabled="isSaving || isLoading">
           {{ isSaving ? 'Salvando...' : 'Salvar' }}
@@ -45,13 +45,10 @@
 import { ref, computed, watch } from 'vue';
 import { Calendar as VCalendar } from 'v-calendar';
 import 'v-calendar/style.css';
-// Adicionado 'isValid' para a verificação de datas
-import { format, parseISO, isValid } from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
 
 const isOpen = ref(false);
 const note = ref('');
-const selectedDate = ref(''); // Inicializado como string vazia
+const selectedDate = ref(''); // yyyy-MM-dd
 const isLoading = ref(false);
 const isSaving = ref(false);
 const showSuccessMessage = ref(false);
@@ -60,41 +57,57 @@ function toggleBar() {
   isOpen.value = !isOpen.value;
 }
 
-function onDateSelect(day) {
-  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const zonedDate = utcToZonedTime(day.date, userTimeZone);
-  const dateString = format(zonedDate, 'yyyy-MM-dd');
+// Função para formatar Date para yyyy-MM-dd (local date)
+function formatDateToYMD(date) {
+  const year = date.getFullYear();
+  // Ajusta mês para 2 dígitos
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  // Ajusta dia para 2 dígitos
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
-  // Evita reprocessar se a data já estiver selecionada
+// Quando o usuário clicar em um dia no calendário, ajusta para a data local (no fuso do navegador)
+function onDateSelect(day) {
+  // day.date vem como Date em UTC ou local, dependendo do v-calendar (normalmente local)
+  // Para garantir que seja local, cria uma nova Date no fuso local com os componentes
+  const d = new Date(day.date);
+  const dateString = formatDateToYMD(d);
+
   if (selectedDate.value === dateString) return;
   selectedDate.value = dateString;
 }
 
+// Validação simples de data yyyy-MM-dd
+function isValidDateString(dateStr) {
+  // Regex simples para yyyy-MM-dd
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const d = new Date(dateStr);
+  return !isNaN(d.getTime());
+}
+
 watch(selectedDate, async (dateString) => {
-  // Se não há data selecionada, limpa a nota e sai
-  if (!dateString) {
+  if (!dateString || !isValidDateString(dateString)) {
     note.value = '';
     return;
   }
-  
+
   isLoading.value = true;
-  note.value = ''; // Limpa a nota enquanto carrega
+  note.value = '';
 
   try {
     const response = await fetch(`/planner?date=${dateString}`, {
-      headers: { 'Accept': 'application/json' },
+      headers: { Accept: 'application/json' },
     });
     if (!response.ok) throw new Error(`Erro ao buscar nota: ${response.status}`);
     const data = await response.json();
-    
-    // Garante que a nota carregada corresponde à data ainda selecionada
+
     if (selectedDate.value === dateString) {
       note.value = data.note || '';
     }
   } catch (error) {
     console.error('Falha ao carregar a nota:', error);
   } finally {
-    // Garante que isLoading seja falso apenas se a data ainda for a mesma
     if (selectedDate.value === dateString) {
       isLoading.value = false;
     }
@@ -103,7 +116,6 @@ watch(selectedDate, async (dateString) => {
 
 async function saveNote() {
   const dateString = selectedDate.value;
-  // Não salva se não há data selecionada ou se já está salvando
   if (!dateString || isSaving.value) return;
 
   isSaving.value = true;
@@ -119,7 +131,7 @@ async function saveNote() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'X-CSRF-TOKEN': csrfToken,
       },
       body: JSON.stringify({
@@ -134,11 +146,12 @@ async function saveNote() {
     }
 
     const data = await response.json();
-    note.value = data.note; // Atualiza a nota com o que o servidor retornou (pode ser útil para confirmação)
+    note.value = data.note;
 
     showSuccessMessage.value = true;
-    setTimeout(() => { showSuccessMessage.value = false; }, 3000); // Esconde a mensagem após 3 segundos
-
+    setTimeout(() => {
+      showSuccessMessage.value = false;
+    }, 3000);
   } catch (error) {
     console.error('Erro ao salvar nota:', error);
   } finally {
@@ -146,41 +159,35 @@ async function saveNote() {
   }
 }
 
-// PROPRIEDADE COMPUTADA COM A CORREÇÃO
+// Atributos para marcar a data selecionada no calendário
 const calendarAttributes = computed(() => {
-  // 1. Se selectedDate.value for uma string vazia, retorna um array vazio.
-  // Isso evita que parseISO receba uma string vazia e crie um objeto de data inválido.
-  if (!selectedDate.value) {
+  if (!selectedDate.value || !isValidDateString(selectedDate.value)) {
     return [];
   }
 
-  const dateForCalendar = parseISO(selectedDate.value);
+  // Criar objeto Date a partir da string selecionada
+  const dateObj = new Date(selectedDate.value + 'T00:00:00');
 
-  // 2. Adiciona uma verificação extra com isValid para garantir que a data parseada seja realmente válida.
-  // Se não for, também retorna um array vazio.
-  if (!isValid(dateForCalendar)) {
-    console.warn('Data inválida detectada para o calendário:', selectedDate.value);
-    return [];
-  }
-
-  return [{
-    key: 'selected',
-    highlight: {
-      style: {
-        backgroundColor: 'transparent',
-        border: '2px solid #135572',
+  return [
+    {
+      key: 'selected',
+      highlight: {
+        style: {
+          backgroundColor: 'transparent',
+          border: '2px solid #135572',
+        },
+        contentStyle: {
+          color: '#135572',
+        },
       },
-      contentStyle: {
-        color: '#135572',
-      }
+      dates: dateObj,
     },
-    dates: dateForCalendar,
-  }];
+  ];
 });
 </script>
 
 <style scoped>
-/* ESTILOS CSS - NENHUMA ALTERAÇÃO AQUI */
+/* mantém seu CSS atual sem alterações */
 .success-notification {
   position: absolute;
   bottom: 20px;
@@ -210,10 +217,22 @@ const calendarAttributes = computed(() => {
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; transform: translate(-50%, 10px); }
-  20% { opacity: 1; transform: translate(-50%, 0); }
-  80% { opacity: 1; transform: translate(-50%, 0); }
-  100% { opacity: 0; transform: translate(-50%, 10px); }
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
 }
 
 .planner-bar {
@@ -221,7 +240,6 @@ const calendarAttributes = computed(() => {
   top: 0;
   right: 0;
   height: 100vh;
-  /* Cor atualizada para #B0D5FF */
   background: #B0D5FF;
   box-shadow: -2px 0 10px rgba(0,0,0,0.07);
   border-top-left-radius: 32px;
@@ -277,8 +295,8 @@ const calendarAttributes = computed(() => {
 }
 
 .planner-bar:not(.open) .content {
-    opacity: 0;
-    pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .content h2 {
@@ -322,8 +340,8 @@ const calendarAttributes = computed(() => {
 }
 
 .notes-section textarea:disabled {
-    background-color: #f0f0f0;
-    cursor: wait;
+  background-color: #f0f0f0;
+  cursor: wait;
 }
 
 .notes-section .caderno-furos {
@@ -386,9 +404,9 @@ const calendarAttributes = computed(() => {
 }
 
 .save-btn:disabled {
-    background-color: #5a7a8a;
-    cursor: not-allowed;
-    opacity: 0.7;
+  background-color: #5a7a8a;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .notes-section textarea::-webkit-scrollbar {
