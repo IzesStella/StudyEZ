@@ -17,7 +17,6 @@
           >
             <div>
               <h3 class="community-name">{{ community.name }}</h3>
-              <p class="community-description">{{ community.description }}</p>
               <p class="community-monitor">Monitor: {{ community.creator?.name || 'Você' }}</p>
             </div>
             <button
