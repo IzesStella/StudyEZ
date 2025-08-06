@@ -28,7 +28,7 @@
       </div>
       <div class="feature">
         <img src="/images/icon-chat.png" alt="Chat" />
-        <h3>TIRE CONVERSE COM MONITORES</h3>
+        <h3>INICIE CHATS COM MONITORES</h3>
         <p>Poste suas perguntas ou inicie o chat.</p>
       </div>
     </div>
