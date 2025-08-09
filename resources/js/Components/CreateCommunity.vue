@@ -19,13 +19,17 @@
           </div>
 
           <!-- Descrição (opcional) -->
-          <div class="desc-section">
+           <div class="desc-section">
             <h2>Descrição</h2>
             <textarea
               v-model="form.description"
               placeholder="Descrição (opcional)"
               class="modal-textarea"
+              maxlength="130"
             ></textarea>
+            <p class="char-count">
+              {{ form.description.length }}/130 caracteres
+            </p>
           </div>
 
           <!-- Botões -->
@@ -70,7 +74,8 @@ function submit() {
     onSuccess: () => {
       toast.success('Comunidade criada com sucesso!')
       form.reset()          // limpa o formulário
-      emit('created')       // avisa o componente pai (DashboardMonitor)
+      emit('created')  
+      emit('close') 
     },
     onError: (errors) => {
       Object.values(errors).flat().forEach(msg => toast.error(msg))
@@ -107,6 +112,13 @@ function submit() {
   box-shadow: 0 0 8px rgba(0,0,0,0.2);
 }
 .modal-textarea { min-height: 120px; resize: vertical; }
+
+.char-count {
+  font-size: 0.875rem; 
+  color: #6b7280;     
+  text-align: right;  
+  margin-top: 4px;    
+}
 .btn-right {
   display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;
 }
@@ -118,4 +130,19 @@ function submit() {
 }
 .save-btn:hover:enabled { background: #8bbbe6; }
 .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cancel-btn {
+  background: #e5e7eb;
+  color: #4b5563;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.cancel-btn:hover {
+  background: #d1d5db;
+}
 </style>
