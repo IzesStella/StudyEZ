@@ -16,9 +16,8 @@
         <button class="nav-button" @click="$emit('open-create-community')" style="color: #e3971c;">
           <font-awesome-icon :icon="['fas', 'users']" />
           <font-awesome-icon :icon="['fas', 'plus']" style="color: #e3971c;" />
-        </button>
-        <!-- Chat -->
-        <button class="nav-button" style="color: #e3971c;">
+         </button>
+        <button class="nav-button" style="color: #e3971c;" @click="goToRoute('/chat')">
           <font-awesome-icon :icon="['fas', 'comment-dots']" />
         </button>
       </div>

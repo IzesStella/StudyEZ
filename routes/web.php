@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PlannerController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ChatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -85,6 +86,19 @@ Route::post('/planner', [PlannerController::class, 'store'])
      // Rota para criar um novo post
            Route::post('/communities/{community}/posts', [PostController::class, 'store'])
                ->name('posts.store');
+
+     //rota do chat
+     Route::get('/chat/{monitorId}', [ChatController::class, 'show'])
+    ->name('chat.show');
+
+    Route::get('/chats', [ChatController::class, 'index'])->name('chats.index');
+    // ... (outras rotas) ...
+
+// Rota para a página de chat, com o monitorId opcional.
+// Se o monitorId estiver presente, abre o chat com aquele monitor.
+// Se não estiver, apenas exibe a lista de conversas.
+Route::get('/chat/{monitorId?}', [ChatController::class, 'show'])->name('chat.show');
+     
 
     //
     // 4) Inscrição e cancelamento (aluno apenas)

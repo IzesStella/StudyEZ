@@ -13,7 +13,6 @@
       :community="community"
     />
 
-    <!-- O NOVO MODAL DE COMENTÁRIOS -->
     <CommentModal
       v-if="showCommentModal"
       @close="showCommentModal = false"
@@ -54,7 +53,8 @@
         </button>
 
         <button
-          v-if="user && (isStudent)"
+          v-if="user && isStudent && isSubscribed"
+          @click="startChat"
           class="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           Iniciar Chat
@@ -94,7 +94,6 @@
         <h2 class="text-xl font-semibold mb-2">{{ post.title }}</h2>
         <p class="text-gray-700 mb-4">{{ post.content }}</p>
         
-        <!-- BOTÃO DE COMENTÁRIOS - AGORA ABRE O MODAL -->
         <button
           @click="openCommentModal(post)"
           class="flex items-center text-gray-500 hover:text-gray-700 transition"
@@ -116,7 +115,6 @@
           <span>Comentários ({{ post.comments ? post.comments.length : 0 }})</span>
         </button>
 
-        <!-- LISTA DE COMENTÁRIOS PARA ESTE POST -->
         <div v-if="post.comments && post.comments.length > 0" class="ml-12 mt-4 space-y-3">
           <div v-for="comment in post.comments" :key="comment.id" class="flex items-start">
             <div
@@ -147,7 +145,6 @@ import CommentModal from '@/Components/CommentModal.vue'
 
 import { defineProps, ref, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
-import axios from 'axios'     // ← Import do axios
 
 const props = defineProps({
   community: { type: Object, required: true },
@@ -188,36 +185,16 @@ function openCommentModal(post) {
   showCommentModal.value = true
 }
 
-// NOVO: função que busca todos os comentários de um post lá no backend
-async function reloadComments(postId) {
-  try {
-    const res = await axios.get(`/posts/${postId}/comments`) // ajuste a URL conforme sua rota showThread
-    const updated = res.data    // array de comentários vindo do controller
-    const idx = localPosts.value.findIndex(p => p.id === postId)
-    if (idx !== -1) {
-      localPosts.value[idx] = {
-        ...localPosts.value[idx],
-        comments: updated
-      }
-    }
-  }
-  catch (e) {
-    console.error('Erro ao recarregar comentários:', e)
-  }
+// A função handleCommentAdded corrigida para usar Inertia.js
+function handleCommentAdded() {
+  router.reload({ only: ['posts'], preserveScroll: true })
+  showCommentModal.value = false
 }
 
-// handleCommentAdded agora dispara o reload completo da thread
-async function handleCommentAdded(newComment) {
-  // você ainda pode inserir localmente, se quiser feedback imediato
-  const postIndex = localPosts.value.findIndex(p => p.id === newComment.post_id)
-  if (postIndex !== -1) {
-    // opcional: adiciona imediatamente
-    localPosts.value[postIndex].comments = [
-      ...(localPosts.value[postIndex].comments || []),
-      newComment
-    ]
-  }
-  // e então recarrega toda a thread do servidor
-  await reloadComments(newComment.post_id)
+// AAdicionada a nova função startChat
+function startChat() {
+  // Faz a navegação para a rota de chat
+  // `props.community.creator.id` obtém o ID do monitor
+  router.get(`/chat/${props.community.creator.id}`);
 }
 </script>

@@ -10,8 +10,7 @@
         <button class="nav-button" @click="goToRoute('/search')" style="color: #e3971c;">
           <font-awesome-icon :icon="['fas', 'search']" />
         </button>
-        <!-- Chat -->
-        <button class="nav-button" style="color: #e3971c;">
+       <button class="nav-button" style="color: #e3971c;" @click="goToRoute('/chat')">
           <font-awesome-icon :icon="['fas', 'comment-dots']" />
         </button>
       </div>
