@@ -19,6 +19,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY . .
 COPY .env.example .env
+RUN composer require pusher/pusher-php-server --no-interaction
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # --- Build do Frontend ---

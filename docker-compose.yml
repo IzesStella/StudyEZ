@@ -59,6 +59,19 @@ services:
         networks:
             - sail
 
+    laravel-echo-server:
+        image: 'oanhnn/laravel-echo-server'
+        ports:
+            - '6001:6001'
+        environment:
+            LARAVEL_ECHO_SERVER_DB: redis
+            LARAVEL_ECHO_SERVER_REDIS_HOST: redis
+            LARAVEL_ECHO_SERVER_REDIS_PORT: 6379
+        networks:
+            - sail
+        depends_on:
+            - redis
+
 networks:
     sail:
         driver: bridge

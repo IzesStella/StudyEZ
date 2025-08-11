@@ -72,4 +72,5 @@ chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 echo "✅ StudyEZ configurado! Iniciando PHP-FPM..."
+# Para WebSocket/Chat, configure o Pusher no .env ou use Laravel Echo Server
 exec php-fpm
