@@ -51,9 +51,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+# Copiar TUDO do projeto
 COPY . .
 
-# Copiar dependências do Composer e Node.js dos estágios anteriores
+# Copiar dependências dos estágios anteriores (DEPOIS do COPY)
 COPY --from=composer-stage /app/vendor ./vendor
 COPY --from=build-stage /app/public/build ./public/build
 
@@ -61,7 +62,7 @@ COPY --from=build-stage /app/public/build ./public/build
 RUN mkdir -p storage/{app/public,framework/{cache,sessions,views},logs} bootstrap/cache
 
 # Ajustar permissões
-RUN chown -R www-data:www-data storage bootstrap/cache \
+RUN chown -R www-data:www-data storage bootstrap/cache vendor \
     && chmod -R 775 storage bootstrap/cache
 
 # Entrypoint

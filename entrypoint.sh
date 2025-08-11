@@ -3,49 +3,73 @@ set -e
 
 echo "🚀 Iniciando StudyEZ..."
 
-# 1) Usar configuração Docker (opcional, mas recomendado)
-if [ -f .env.docker ]; then
-    echo "📋 Copiando .env.docker para .env..."
-    cp .env.docker .env
-fi
+# SEMPRE recriar .env baseado no .env.example para Docker
+echo "📋 Recriando .env baseado no .env.example..."
+cp .env.example .env
 
-# 2) Aguardar MySQL estar completamente pronto
+# Ajustar configurações para Docker
+echo "🔧 Ajustando configurações para Docker..."
+
+# Database - manter usuário root, só mudar host e senha
+sed -i 's/DB_HOST=127.0.0.1/DB_HOST=mysql/' .env
+sed -i 's/DB_PASSWORD=root/DB_PASSWORD=password/' .env
+
+# App URL para porta 8000
+sed -i 's|APP_URL=http://localhost|APP_URL=http://localhost:8000|' .env
+
+# Environment para debug temporário
+sed -i 's/APP_ENV=local/APP_ENV=local/' .env
+sed -i 's/APP_DEBUG=true/APP_DEBUG=true/' .env
+
+echo "✅ Arquivo .env configurado para Docker!"
+
+# Aguardar MySQL - método mais simples
 echo "🔍 Aguardando MySQL..."
-until mysqladmin ping -h mysql --silent 2>/dev/null; do
-    echo "⏳ MySQL ainda não está pronto..."
-    sleep 3
-done
+sleep 30
 
-sleep 5
-echo "✅ MySQL conectado!"
-
-# 3) Configurar aplicação
+# Configurar aplicação
 echo "🔑 Configurando Laravel..."
 
-# Gerar APP_KEY se necessário
-if ! grep -q "^APP_KEY=base64:" .env 2>/dev/null; then
-    echo "Gerando APP_KEY..."
-    php artisan key:generate --force --no-interaction
-fi
+# Gerar nova APP_KEY
+echo "Gerando nova APP_KEY..."
+php artisan key:generate --force --no-interaction
 
-# 4) Storage link (importante para uploads)
-echo "🔗 Criando storage link..."
-php artisan storage:link --force 2>/dev/null || true
-
-# 5) Migrations
-echo "🗃️ Executando migrations..."
-php artisan migrate --force --no-interaction
-
-# 6) Cache
-echo "🧹 Configurando cache..."
+# Limpar caches
+echo "🧹 Limpando caches..."
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
+php artisan cache:clear
 
-# 7) Permissões para uploads
+# Storage link ANTES de copiar arquivos
+echo "🔗 Criando storage link..."
+php artisan storage:link --force 2>/dev/null || true
+
+# Copiar arquivos públicos para o volume compartilhado (incluindo build E storage)
+echo "📁 Sincronizando arquivos públicos..."
+if [ -d "/var/www/html/public/build" ]; then
+    cp -r /var/www/html/public/* /var/www/html/public/ 2>/dev/null || true
+    echo "✅ Arquivos de build copiados!"
+else
+    echo "⚠️ Pasta build não encontrada"
+fi
+
+# Garantir que o link do storage existe no volume compartilhado
+if [ -L "/var/www/html/public/storage" ]; then
+    echo "🔗 Link do storage já existe!"
+else
+    echo "🔗 Criando link do storage no volume..."
+    ln -sf /var/www/html/storage/app/public /var/www/html/public/storage
+fi
+
+# Migrations - agora usando root com senha password
+echo "🗃️ Executando migrations..."
+php artisan migrate --force --no-interaction
+
+# Permissões - incluir storage/app/public
 echo "🔧 Ajustando permissões..."
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/storage
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/storage
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 echo "✅ StudyEZ configurado! Iniciando PHP-FPM..."
 exec php-fpm
