@@ -49,6 +49,7 @@ class ChatController extends Controller
                     'id' => $otherUser->id,
                     'name' => $otherUser->name,
                     'role' => $otherUser->role,
+                    'profile_photo' => $otherUser->profile_photo,
                 ] : null,
                 'lastMessage' => $lastMessage ? $lastMessage->content : null,
             ];
@@ -103,6 +104,7 @@ class ChatController extends Controller
                     'id' => $otherUser->id,
                     'name' => $otherUser->name,
                     'role' => $otherUser->role,
+                    'profile_photo' => $otherUser->profile_photo,
                 ] : null,
                 'lastMessage' => $lastMessage ? $lastMessage->content : null,
             ];
@@ -116,6 +118,7 @@ class ChatController extends Controller
                 'id' => $otherUser->id,
                 'name' => $otherUser->name,
                 'role' => $otherUser->role ?? null,
+                'profile_photo' => $otherUser->profile_photo,
             ] : null,
             'name' => $otherUser ? "Chat com {$otherUser->name}" : "Chat #{$chat->id}"
         ];
