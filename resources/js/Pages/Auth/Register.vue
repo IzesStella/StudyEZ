@@ -40,7 +40,6 @@ function submit() {
     <div class="container-form w-full max-w-md">
       <h2 class="text-2xl font-bold text-center mb-6">Cadastre-se</h2>
       <form @submit.prevent="submit" class="space-y-4">
-        <!-- Nome -->
         <input
           v-model="form.name"
           type="text"
@@ -49,7 +48,6 @@ function submit() {
           :class="{ 'border-red-500': form.errors.name }"
         />
 
-        <!-- Email -->
         <input
           v-model="form.email"
           type="email"
@@ -58,7 +56,6 @@ function submit() {
           :class="{ 'border-red-500': form.errors.email }"
         />
 
-        <!-- Senha -->
         <input
           v-model="form.password"
           type="password"
@@ -67,7 +64,6 @@ function submit() {
           :class="{ 'border-red-500': form.errors.password }"
         />
 
-        <!-- Confirma Senha -->
         <input
           v-model="form.password_confirmation"
           type="password"
@@ -76,7 +72,6 @@ function submit() {
           :class="{ 'border-red-500': form.errors.password_confirmation }"
         />
 
-        <!-- Role -->
         <select
           v-model="form.role"
           class="campo-entrada"
@@ -94,6 +89,13 @@ function submit() {
           {{ form.processing ? 'Enviando...' : 'Cadastre-se' }}
         </button>
       </form>
+
+      <div class="link-login-container">
+        <p class="ja-e-cadastrado">
+          Já é cadastrado?
+          <a :href="route('login')" class="link-login">Faça seu login!</a>
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -142,5 +144,25 @@ function submit() {
 }
 .botao-enviar:hover:enabled {
   background-color: #53bbe9;
+}
+
+.link-login-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.ja-e-cadastrado {
+  font-size: 14px;
+  color: #555;
+}
+
+.link-login {
+  color: #002F66;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.link-login:hover {
+  text-decoration: underline;
 }
 </style>
