@@ -165,9 +165,9 @@ class CommunityController extends Controller
         
         // 3) Carrega os posts da comunidade
         // AGORA INCLUINDO OS COMENTÁRIOS E OS USUÁRIOS DOS COMENTÁRIOS
-        $posts = Post::with(['user', 'comments' => function($query) {
+        $posts = Post::with(['user:id,name,role,profile_photo', 'comments' => function($query) {
                 $query->whereNull('parent_id') // Apenas comentários de nível superior
-                      ->with('user') // Carrega o usuário que fez o comentário
+                      ->with('user:id,name,role,profile_photo') // Carrega o usuário com profile_photo
                       ->orderBy('created_at', 'asc'); // Ordena os comentários por data
             }])
             ->where('community_id', $community->id)

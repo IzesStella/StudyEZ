@@ -113,10 +113,12 @@ Route::middleware('auth')->group(function () {
     
     // 5) Perfil e logout
     //
-    Route::get('/profile',       fn() => Inertia::render('Profile'))
+    Route::get('/profile',       [ProfileController::class, 'show'])
         ->name('profile.show');
     Route::get('/profile/edit',    [ProfileController::class, 'edit'])
         ->name('profile.edit');
+    Route::get('/profile/{user}', [ProfileController::class, 'showUser'])
+        ->name('profile.user');
     Route::patch('/profile',      [ProfileController::class, 'update'])
         ->name('profile.update');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])

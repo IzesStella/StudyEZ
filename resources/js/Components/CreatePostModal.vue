@@ -6,37 +6,23 @@
       </div>
       <form @submit.prevent="submit">
         <div class="modal-body">
-          <div class="modal-col image-col">
-            <label for="image-upload-area">Adicionar Imagem</label>
-            <div
-              class="image-upload-area"
-              id="image-upload-area"
-              @click="triggerFileInput"
-            >
-            </div>
-            <input
-              type="file"
-              multiple
-              class="file-input"
-              ref="fileInput"
-              @change="handleFiles"
-            />
-          </div>
-          <div class="modal-col">
+          <div class="modal-col full-width">
             <label for="post-title">Título</label>
             <input
               id="post-title"
               type="text"
               v-model="form.title"
               class="text-input"
-              placeholder=" "
+              placeholder="Digite o título do post"
+              required
             />
             <label for="post-content">Mensagem</label>
             <textarea
               id="post-content"
               v-model="form.content"
               class="message-textarea"
-              placeholder=" "
+              placeholder="Escreva sua mensagem aqui..."
+              required
             />
           </div>
         </div>
@@ -58,8 +44,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useForm, router } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
   community: { type: Object, required: true },
@@ -72,16 +57,6 @@ const form = useForm({
   content: '',
   community_id: props.community.id,
 });
-
-const fileInput = ref(null);
-
-function triggerFileInput() {
-  fileInput.value && fileInput.value.click();
-}
-
-function handleFiles(event) {
-  // Lógica para lidar com o upload de arquivos pode ser implementada aqui
-}
 
 function submit() {
   form.post(route('posts.store', { community: props.community.id }), {
@@ -134,63 +109,60 @@ function submit() {
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 32px;
   margin-bottom: 32px;
 }
 
-@media (min-width: 768px) {
-  .modal-body {
-    flex-direction: row;
-  }
-}
-
 .modal-col {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
 }
 
 .modal-col label {
   font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.file-input {
-  display: none;
-}
-
-.image-upload-area {
-  border: 2px solid #ff9500;
-  border-radius: 10px;
-  background: #fff;
-  flex-grow: 1;
-  cursor: pointer;
-  box-sizing: border-box;
-  /* Sombra mais forte e visível */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: #153a6b;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .text-input {
-  border: 1.5px solid black;
+  border: 1.5px solid #153a6b;
   border-radius: 10px;
   width: 100%;
-  padding: 10px;
+  padding: 12px 16px;
   font-size: 1rem;
-  /* Sombra mais forte e visível */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
-  margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: #ff9500;
+  box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
 }
 
 .message-textarea {
-  border: 1.5px solid black;
+  border: 1.5px solid #153a6b;
   border-radius: 10px;
   width: 100%;
-  padding: 10px;
+  padding: 12px 16px;
   font-size: 1rem;
+  font-family: 'Inter', sans-serif;
   resize: vertical;
-  /* Sombra mais forte e visível */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
-  min-height: 220px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 180px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.message-textarea:focus {
+  outline: none;
+  border-color: #ff9500;
+  box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
 }
 
 .modal-footer {

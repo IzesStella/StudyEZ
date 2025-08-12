@@ -1,38 +1,42 @@
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-4 text-gray-800">Adicionar Comentário</h2>
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Adicionar Comentário</h2>
+      </div>
 
       <form @submit.prevent="submitComment">
-        <div class="mb-4">
-          <label for="commentContent" class="block text-gray-700 text-sm font-bold mb-2">Seu Comentário:</label>
-          <textarea
-            id="commentContent"
-            v-model="newCommentContent"
-            class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32 resize-none"
-            placeholder="Escreva seu comentário aqui..."
-            required
-          ></textarea>
+        <div class="modal-body">
+          <div class="modal-col full-width">
+            <label for="commentContent">Seu Comentário:</label>
+            <textarea
+              id="commentContent"
+              v-model="newCommentContent"
+              class="message-textarea"
+              placeholder="Escreva seu comentário aqui..."
+              required
+            ></textarea>
+          </div>
         </div>
 
-        <div class="flex justify-end space-x-3">
-          <button
-            type="button"
-            @click="$emit('close')"
-            class="bg-gray-300 text-gray-800 font-semibold px-5 py-2 rounded-lg hover:bg-gray-400 transition"
-          >
-            Fechar
-          </button>
+        <div class="modal-footer">
           <button
             type="submit"
             :disabled="isLoading"
-            class="bg-blue-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="btn-postar"
           >
             {{ isLoading ? 'Enviando...' : 'Comentar' }}
           </button>
+          <button
+            type="button"
+            @click="$emit('close')"
+            class="btn-cancelar"
+          >
+            Fechar
+          </button>
         </div>
 
-        <p v-if="errorMessage" class="text-red-500 text-sm mt-3">{{ errorMessage }}</p>
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
       </form>
     </div>
   </div>
@@ -84,3 +88,135 @@ const submitComment = async () => {
   }
 };
 </script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+}
+
+.modal-header {
+  background: #b5d6fa;
+  border-radius: 16px 16px 0 0;
+  margin: -32px -32px 24px -32px;
+  padding: 18px 0 14px 0;
+  text-align: center;
+}
+
+.modal-header h2 {
+  color: #153a6b;
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 32px;
+}
+
+.modal-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.modal-col label {
+  font-weight: 600;
+  color: #153a6b;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.message-textarea {
+  border: 1.5px solid #153a6b;
+  border-radius: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  resize: vertical;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 140px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.message-textarea:focus {
+  outline: none;
+  border-color: #ff9500;
+  box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.btn-postar {
+  background: #b5d6fa;
+  color: #111;
+  font-weight: 600;
+  padding: 10px 32px;
+  border-radius: 10px;
+  font-size: 1.15rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-postar:hover {
+  background: #8fc3fa;
+}
+
+.btn-postar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancelar {
+  background: #ff9500;
+  color: #111;
+  font-weight: 600;
+  padding: 10px 32px;
+  border-radius: 10px;
+  font-size: 1.15rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-cancelar:hover {
+  background: #e07d00;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 16px;
+  text-align: center;
+  font-weight: 500;
+}
+</style>
