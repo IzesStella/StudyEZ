@@ -8,10 +8,11 @@
       <div class="lado-direito">
         <h2 class="titulo">Login</h2>
         <form @submit.prevent="login">
-          <!-- E‑mail -->
           <div class="campo">
             <div class="input-box">
-              <span class="icone">📧</span>
+              <span class="icone">
+                <font-awesome-icon icon="fa-solid fa-at" />
+              </span>
               <input
                 type="email"
                 v-model="form.email"
@@ -22,10 +23,11 @@
             </div>
           </div>
 
-          <!-- Senha -->
           <div class="campo">
             <div class="input-box">
-              <span class="icone">🔒</span>
+              <span class="icone">
+                <font-awesome-icon icon="fa-solid fa-lock" />
+              </span>
               <input
                 type="password"
                 v-model="form.password"
@@ -34,6 +36,13 @@
                 required
               />
             </div>
+          </div>
+
+          <div class="cadastro">
+            <p>
+              Não é cadastrado ainda?
+              <a :href="route('register')" class="link-cadastro">Cadastre-se</a>
+            </p>
           </div>
 
           <button type="submit" class="botao" :disabled="processing">
@@ -46,7 +55,7 @@
 </template>
 
 <script setup>
-import { useForm, usePage, router } from '@inertiajs/vue3'
+import { useForm, router } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
@@ -164,19 +173,21 @@ function login() {
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
 }
 
-.esqueci {
+/* Novo estilo para o link de cadastro */
+.cadastro {
   text-align: right;
-  font-size: 12px;
-  margin-bottom: 10px;
+  margin-top: 10px;
+  font-size: 14px;
 }
 
-.link {
-  color: #333;
-  text-decoration: none;
-}
-
-.link:hover {
+.link-cadastro {
+  color: #002F66;
   text-decoration: underline;
+  font-weight: bold;
+}
+
+.link-cadastro:hover {
+  color: #53bbe9;
 }
 
 .botao {

@@ -17,6 +17,8 @@ import {
   faPlus,
   faCommentDots,
   faSignOutAlt,
+  faAt, // Ícone para e-mail
+  faLock, // Ícone para senha
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
@@ -29,7 +31,8 @@ library.add(
   faPlus,
   faCommentDots,
   faSignOutAlt,
-  
+  faAt, // Adicionado
+  faLock, // Adicionado
 );
 
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';
