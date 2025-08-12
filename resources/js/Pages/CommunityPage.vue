@@ -65,18 +65,31 @@
     <div v-if="localPosts.length === 0" class="text-center text-gray-500 py-10">
       Nenhum post ainda. Seja o primeiro a postar!
     </div>
-    <div v-else v-for="post in localPosts" :key="post.id" class="post-card border-b border-gray-200 pb-6 mb-6">
+    <div v-else v-for="post in localPosts" :key="post.id" :id="`post-${post.id}`" class="post-card border-b border-gray-200 pb-6 mb-6">
       <div class="flex items-center mb-2">
-        <div
-          class="avatar w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-          :class="post.user.role === 'monitor' ? 'avatar-monitor' : 'avatar-student'"
-        >
-          {{ post.user.name.charAt(0) }}
-        </div>
+        <template v-if="post.user.profile_photo">
+          <img 
+            :src="`/storage/${post.user.profile_photo}`" 
+            :alt="post.user.name" 
+            class="w-10 h-10 rounded-full object-cover border-2 cursor-pointer hover:opacity-80 transition"
+            :class="post.user.role === 'monitor' ? 'border-yellow-500' : 'border-orange-500'"
+            @click="goToProfile(post.user.id)"
+          />
+        </template>
+        <template v-else>
+          <div
+            class="avatar w-10 h-10 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:opacity-80 transition"
+            :class="post.user.role === 'monitor' ? 'avatar-monitor' : 'avatar-student'"
+            @click="goToProfile(post.user.id)"
+          >
+            {{ post.user.name.charAt(0) }}
+          </div>
+        </template>
         <div class="ml-3">
           <p
-            class="font-semibold flex items-center"
+            class="font-semibold flex items-center cursor-pointer hover:underline transition"
             :class="post.user.role === 'monitor' ? 'text-yellow-600' : 'text-gray-900'"
+            @click="goToProfile(post.user.id)"
           >
             {{ post.user.name }}
             <span v-if="post.user.role === 'monitor'" class="ml-2">
@@ -114,17 +127,49 @@
         <span>Comentários ({{ post.comments ? post.comments.length : 0 }})</span>
       </button>
 
-      <div v-if="post.comments && post.comments.length > 0" class="comment-list">
-        <div v-for="comment in post.comments" :key="comment.id" class="flex items-start comment-item">
-          <div
-            class="comment-avatar w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm bg-gray-500"
-          >
-            {{ comment.user.name.charAt(0) }}
-          </div>
-          <div class="ml-3 bg-gray-100 rounded-lg p-3 flex-grow comment-text-box">
-            <p class="font-semibold text-gray-800">{{ comment.user.name }}</p>
-            <p class="text-gray-700 break-words">{{ comment.content }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ new Date(comment.created_at).toLocaleString() }}</p>
+      <div v-if="post.comments && post.comments.length > 0" class="comments-section mt-6">
+        <div class="comments-header">
+          <h4 class="comments-title">Comentários</h4>
+        </div>
+        <div class="comments-list">
+          <div v-for="comment in post.comments" :key="comment.id" class="comment-item">
+            <div class="comment-avatar-container">
+              <template v-if="comment.user.profile_photo">
+                <img 
+                  :src="`/storage/${comment.user.profile_photo}`" 
+                  :alt="comment.user.name" 
+                  class="comment-avatar-image cursor-pointer hover:opacity-80 transition"
+                  @click="goToProfile(comment.user.id)"
+                />
+              </template>
+              <template v-else>
+                <div
+                  class="comment-avatar-fallback cursor-pointer hover:opacity-80 transition"
+                  :class="comment.user.role === 'monitor' ? 'avatar-monitor' : 'avatar-student'"
+                  @click="goToProfile(comment.user.id)"
+                >
+                  {{ comment.user.name.charAt(0) }}
+                </div>
+              </template>
+            </div>
+            <div class="comment-content">
+              <div class="comment-header">
+                <p 
+                  class="comment-author cursor-pointer hover:underline transition"
+                  :class="comment.user.role === 'monitor' ? 'text-yellow-600 font-semibold' : 'text-gray-800 font-semibold'"
+                  @click="goToProfile(comment.user.id)"
+                >
+                  {{ comment.user.name }}
+                  <span v-if="comment.user.role === 'monitor'" class="monitor-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  </span>
+                </p>
+                <span class="comment-date">{{ new Date(comment.created_at).toLocaleString() }}</span>
+              </div>
+              <p class="comment-text">{{ comment.content }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -142,7 +187,7 @@ import LogoStudyEZ from '@/Components/LogoStudyEZ.vue'
 import WarningModal from '@/Components/WarningModal.vue'
 import CommentModal from '@/Components/CommentModal.vue'
 
-import { defineProps, ref, watch } from 'vue'
+import { defineProps, ref, watch, onMounted, nextTick } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
@@ -150,6 +195,24 @@ const props = defineProps({
   user: { type: Object, required: false, default: null },
   isSubscribed: { type: Boolean, required: false, default: false },
   posts: { type: Array, required: true, default: () => [] },
+})
+
+// Funcionalidade de scroll automático para posts específicos
+onMounted(() => {
+  nextTick(() => {
+    const hash = window.location.hash
+    if (hash && hash.startsWith('#post-')) {
+      const element = document.querySelector(hash)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // Adiciona um destaque temporário ao post
+        element.classList.add('highlighted-post')
+        setTimeout(() => {
+          element.classList.remove('highlighted-post')
+        }, 3000)
+      }
+    }
+  })
 })
 
 const localPosts = ref([...props.posts])
@@ -172,6 +235,9 @@ function subscribe() {
 function unsubscribe() {
   router.delete(`/communities/${props.community.id}/unsubscribe`, {}, { preserveScroll: true })
 }
+function goToProfile(userId) {
+  router.get(`/profile/${userId}`)
+}
 function handlePostClick() {
   if (props.user.role === 'student' && !props.isSubscribed) {
     showWarningModal.value = true
@@ -190,11 +256,13 @@ function handleCommentAdded() {
   showCommentModal.value = false
 }
 
-// AAdicionada a nova função startChat
 function startChat() {
-  // Faz a navegação para a rota de chat
-  // `props.community.creator.id` obtém o ID do monitor
-  router.get(`/chat/${props.community.creator.id}`);
+    router.post(`/chat/start/${props.community.creator.id}`, {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            // O redirecionamento será feito automaticamente pelo backend
+        }
+    });
 }
 </script>
 
@@ -270,37 +338,140 @@ function startChat() {
     background-color: #ea580c;
 }
 
-.comment-list {
-    margin-left: 3rem;
-    margin-top: 1rem;
+/* Nova seção de comentários */
+.comments-section {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.comments-header {
+    margin-bottom: 1rem;
+}
+
+.comments-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.comments-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
 .comment-item {
     display: flex;
     align-items: flex-start;
-    width: 100%;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    background-color: #e7f4ff;
 }
 
-.comment-avatar {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 9999px;
+.comment-item:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.comment-avatar-container {
+    flex-shrink: 0;
+}
+
+.comment-avatar-image {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e5e7eb;
+}
+
+.comment-avatar-fallback {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: bold;
-    font-size: 0.875rem;
-    background-color: #6b7280;
+    font-size: 1rem;
+    border: 2px solid #e5e7eb;
 }
-.comment-text-box {
-    background-color: #f3f4f6;
+
+.comment-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.comment-author {
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.monitor-badge {
+    display: inline-flex;
+    align-items: center;
+}
+
+.comment-date {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.comment-text {
+    font-size: 0.9rem;
+    color: #374151;
+    line-height: 1.5;
+    word-wrap: break-word;
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Responsividade para comentários */
+@media (max-width: 640px) {
+    .comment-item {
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+    
+    .comment-avatar-image,
+    .comment-avatar-fallback {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.875rem;
+    }
+    
+    .comment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+}
+
+/* Destaque para posts navegados */
+.highlighted-post {
+    background-color: #fef3c7;
+    border: 2px solid #f59e0b;
     border-radius: 8px;
-    padding: 0.75rem;
-    flex-grow: 1;
-    overflow-wrap: break-word;
+    transition: all 0.3s ease;
 }
 </style>

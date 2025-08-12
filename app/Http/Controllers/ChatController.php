@@ -9,30 +9,37 @@ use App\Events\NewChatMessage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use Inertia\Response as InertiaResponse;
 
 class ChatController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of the chats for the authenticated user.
+     *
+     * @return \Inertia\Response
+     */
+    public function index(): InertiaResponse
     {
         $user = auth()->user();
-        if (! $user) {
+        if (!$user) {
             abort(403);
         }
 
-        // Obtém os chats usando o DB para evitar o erro de método indefinido
-        $chats = DB::table('chats')
-            ->join('chat_user', 'chats.id', '=', 'chat_user.chat_id')
-            ->where('chat_user.user_id', $user->id)
-            ->select('chats.id')
-            ->pluck('chats.id');
+        // Obtém os chats do usuário com as relações necessárias
+        $chats = Chat::whereHas('users', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->with([
+            'messages' => fn($q) => $q->latest()->limit(1),
+            'users' => fn($q) => $q->where('id', '!=', $user->id),
+        ])
+        ->latest('updated_at') // Ordena pelo chat mais recente
+        ->get();
 
-        $chatList = Chat::whereIn('id', $chats)
-            ->with([
-                'messages' => fn($q) => $q->latest()->limit(1),
-                'users' => fn($q) => $q->where('id', '!=', $user->id),
-            ])->get();
-
-        $formattedChats = $chatList->map(function ($chat) {
+        $formattedChats = $chats->map(function ($chat) {
             $otherUser = $chat->users->first();
             $lastMessage = $chat->messages->first();
 
@@ -41,7 +48,7 @@ class ChatController extends Controller
                 'user' => $otherUser ? [
                     'id' => $otherUser->id,
                     'name' => $otherUser->name,
-                    'role' => $otherUser->role, // Adicione a função aqui
+                    'role' => $otherUser->role,
                 ] : null,
                 'lastMessage' => $lastMessage ? $lastMessage->content : null,
             ];
@@ -54,31 +61,39 @@ class ChatController extends Controller
         ]);
     }
 
-    public function show(Chat $chat)
+    /**
+     * Display the specified chat.
+     *
+     * @param  \App\Models\Chat  $chat
+     * @return \Inertia\Response
+     */
+    public function show(Chat $chat): InertiaResponse
     {
         $user = auth()->user();
-        if (! $user) {
+        if (!$user) {
             abort(403);
         }
 
-        if (! $chat->users()->where('id', $user->id)->exists()) {
-            abort(403);
+        // Verifica se o usuário logado pertence a este chat
+        if (!$chat->users()->where('id', $user->id)->exists()) {
+            abort(403, 'Acesso negado.');
         }
 
-        // Obtém os chats usando o DB para evitar o erro de método indefinido
-        $chats = DB::table('chats')
-            ->join('chat_user', 'chats.id', '=', 'chat_user.chat_id')
-            ->where('chat_user.user_id', $user->id)
-            ->select('chats.id')
-            ->pluck('chats.id');
+        // Carrega mensagens e usuários relacionados
+        $messages = $chat->messages()->with('user')->get();
 
-        $chatList = Chat::whereIn('id', $chats)
-            ->with([
-                'messages' => fn($q) => $q->latest()->limit(1),
-                'users' => fn($q) => $q->where('id', '!=', $user->id),
-            ])->get();
-            
-        $formattedChats = $chatList->map(function ($c) {
+        // Obtém os chats do usuário, assim como no método index
+        $chats = Chat::whereHas('users', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->with([
+            'messages' => fn($q) => $q->latest()->limit(1),
+            'users' => fn($q) => $q->where('id', '!=', $user->id),
+        ])
+        ->latest('updated_at')
+        ->get();
+        
+        $formattedChats = $chats->map(function ($c) {
             $otherUser = $c->users->first();
             $lastMessage = $c->messages->first();
 
@@ -87,21 +102,20 @@ class ChatController extends Controller
                 'user' => $otherUser ? [
                     'id' => $otherUser->id,
                     'name' => $otherUser->name,
-                    'role' => $otherUser->role, // Adicione a função aqui
+                    'role' => $otherUser->role,
                 ] : null,
                 'lastMessage' => $lastMessage ? $lastMessage->content : null,
             ];
         });
 
-        $messages = $chat->messages()->with('user')->get();
-
+        // Formata o chat atual
         $otherUser = $chat->users()->where('id', '!=', $user->id)->first();
         $formattedCurrentChat = [
             'id' => $chat->id,
             'user' => $otherUser ? [
                 'id' => $otherUser->id,
                 'name' => $otherUser->name,
-                'role' => $otherUser->role ?? null, // Aqui também para a página de chat
+                'role' => $otherUser->role ?? null,
             ] : null,
             'name' => $otherUser ? "Chat com {$otherUser->name}" : "Chat #{$chat->id}"
         ];
@@ -113,7 +127,13 @@ class ChatController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created chat message in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'chat_id' => 'required|exists:chats,id',
@@ -123,7 +143,7 @@ class ChatController extends Controller
         $chat = Chat::find($request->input('chat_id'));
         $userId = auth()->id();
 
-        if (! $chat || ! $chat->users()->where('id', $userId)->exists()) {
+        if (!$chat || !$chat->users()->where('id', $userId)->exists()) {
             return response()->json(['message' => 'Acesso negado'], 403);
         }
 
@@ -133,36 +153,46 @@ class ChatController extends Controller
             'content' => $request->input('content'),
         ]);
 
-        // Dispara evento para WebSocket puro
+        // Atualiza o timestamp do chat
+        $chat->touch();
+
         broadcast(new NewChatMessage($message))->toOthers();
 
-        // Retorne um redirecionamento ou uma resposta vazia para o Inertia
-        // Retornar nada ou um objeto vazio para o Inertia.
-        return back()->with('success', 'Mensagem enviada!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Mensagem enviada!',
+            'data' => $message->load('user')
+        ]);
+    }
+/**
+ * Rota para iniciar ou abrir um chat com um monitor.
+ *
+ * @param  \App\Models\User  $monitor
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function startChat(User $monitor): RedirectResponse
+{
+    $user = auth()->user();
+    if (!$user) {
+        abort(403);
     }
 
-    public function startChat(User $monitor)
-    {
-        $aluno = auth()->user();
-        if (! $aluno) {
-            abort(403);
-        }
+    // Procura um chat existente entre o usuário e o monitor
+    $chat = Chat::whereHas('users', function ($query) use ($user) {
+        $query->where('user_id', $user->id);
+    })->whereHas('users', function ($query) use ($monitor) {
+        $query->where('user_id', $monitor->id);
+    })->first();
 
-        if ($monitor->id === $aluno->id) {
-            return redirect()->back();
-        }
-
-        $chat = Chat::whereHas('users', fn($q) => $q->where('id', $aluno->id))
-            ->whereHas('users', fn($q) => $q->where('id', $monitor->id))
-            ->first();
-
-        if (! $chat) {
-            DB::transaction(function () use (&$chat, $aluno, $monitor) {
-                $chat = Chat::create(['name' => "Chat com {$monitor->name}"]);
-                $chat->users()->attach([$aluno->id, $monitor->id]);
-            });
-        }
-
-        return redirect()->route('chat.show', ['chat' => $chat->id]);
+    // Se não existir, cria um novo chat
+    if (!$chat) {
+        DB::transaction(function () use (&$chat, $user, $monitor) {
+            $chat = Chat::create(['name' => "Chat com {$monitor->name}"]);
+            $chat->users()->attach([$user->id, $monitor->id]);
+        });
     }
+
+    // Redireciona para a rota show do chat
+    return redirect()->route('chat.show', ['chat' => $chat->id]);
+}
 }
