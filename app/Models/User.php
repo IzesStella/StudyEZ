@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Chat;
 
 class User extends Authenticatable
 {
@@ -27,15 +29,10 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        // Remova o cast 'password' => 'hashed'
     ];
 
-    // Mutator removido para hash único
-    // public function setPasswordAttribute($value)
-    // {
-    //     $this->attributes['password'] = bcrypt($value);
-    // }
-
-    public function communities()
+    public function communities(): BelongsToMany
     {
         return $this->belongsToMany(Community::class);
     }
@@ -50,14 +47,24 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
-    // Accessor para a foto de perfil
     public function getAvatarAttribute()
     {
         return $this->profile_photo ? "/storage/{$this->profile_photo}" : '/images/default-avatar.svg';
     }
 
     public function planners()
-{
-    return $this->hasMany(Planner::class);
-}
+    {
+        return $this->hasMany(Planner::class);
+    }
+
+    /**
+     * Define o relacionamento Many-to-Many com o modelo Chat.
+     * Isso é essencial para que o ChatController possa buscar
+     * os chats de um usuário.
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function chats(): BelongsToMany
+    {
+        return $this->belongsToMany(Chat::class);
+    }
 }

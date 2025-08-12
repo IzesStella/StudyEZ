@@ -21,11 +21,28 @@ sed -i 's|APP_URL=http://localhost|APP_URL=http://localhost:8000|' .env
 sed -i 's/APP_ENV=local/APP_ENV=local/' .env
 sed -i 's/APP_DEBUG=true/APP_DEBUG=true/' .env
 
+# Configurar Broadcaster para usar o WebSockets
+sed -i 's/BROADCAST_DRIVER=log/BROADCAST_DRIVER=pusher/' .env
+sed -i 's/QUEUE_CONNECTION=sync/QUEUE_CONNECTION=redis/' .env
+sed -i 's/SESSION_DRIVER=file/SESSION_DRIVER=redis/' .env
+
+sed -i 's/PUSHER_APP_ID=/PUSHER_APP_ID=minha-chave-app-id/' .env
+sed -i 's/PUSHER_APP_KEY=/PUSHER_APP_KEY=minha-chave-app/' .env
+sed -i 's/PUSHER_APP_SECRET=/PUSHER_APP_SECRET=minha-chave-app-secret/' .env
+sed -i 's/PUSHER_HOST=/PUSHER_HOST=websockets/' .env
+sed -i 's/PUSHER_PORT=443/PUSHER_PORT=6001/' .env
+sed -i 's/PUSHER_SCHEME=https/PUSHER_SCHEME=http/' .env
+
 echo "✅ Arquivo .env configurado para Docker!"
 
-# Aguardar MySQL - método mais simples
-echo "🔍 Aguardando MySQL..."
-sleep 30
+# Esperar até que o MySQL esteja pronto
+echo "🔍 Aguardando o MySQL..."
+until nc -z -v -w30 mysql 3306
+do
+  echo "⚠️ MySQL não está pronto. Aguardando..."
+  sleep 5
+done
+echo "✅ MySQL está pronto!"
 
 # Configurar aplicação
 echo "🔑 Configurando Laravel..."
@@ -62,7 +79,7 @@ else
     ln -sf /var/www/html/storage/app/public /var/www/html/public/storage
 fi
 
-# Migrations - agora usando root com senha password
+# Executando migrations - agora usando root com senha password
 echo "🗃️ Executando migrations..."
 php artisan migrate --force --no-interaction
 
@@ -72,5 +89,4 @@ chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 echo "✅ StudyEZ configurado! Iniciando PHP-FPM..."
-# Para WebSocket/Chat, configure o Pusher no .env ou use Laravel Echo Server
 exec php-fpm

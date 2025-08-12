@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     default-mysql-client \
     libzip-dev \
     libpng-dev \
+    netcat-openbsd \
     && docker-php-ext-install pdo_mysql zip gd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -20,7 +21,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . .
 COPY .env.example .env
 RUN composer require pusher/pusher-php-server --no-interaction
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# Instala todas as dependências, incluindo as de desenvolvimento
+RUN composer install --no-scripts
 
 # --- Build do Frontend ---
 FROM node:20 AS build-stage
@@ -29,6 +31,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+# Copiar dependências de composer do estágio anterior
 COPY --from=composer-stage /app/vendor ./vendor
 
 # Build do projeto
@@ -45,6 +48,7 @@ RUN apt-get update && apt-get install -y \
     default-mysql-client \
     libzip-dev \
     libpng-dev \
+    netcat-openbsd \
     && docker-php-ext-install pdo_mysql zip gd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -67,7 +71,7 @@ RUN mkdir -p storage/{app/public,framework/{cache,sessions,views},logs} bootstra
 RUN chown -R www-data:www-data storage bootstrap/cache vendor \
     && chmod -R 775 storage bootstrap/cache
 
-# Entrypoint
+# Copiar o script de entrada
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
