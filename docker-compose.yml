@@ -1,7 +1,8 @@
 version: '3.8'
 
 services:
-    laravel.test:
+# Serviço principal da aplicação Laravel (PHP)
+    app:
         build:
             context: .
             dockerfile: Dockerfile
@@ -9,77 +10,92 @@ services:
         environment:
             WWWUSER: '1000'
             LARAVEL_SAIL: 1
+            DATABASE_HOST: mysql
         volumes:
-            - 'app-public:/var/www/html/public'
+            - 'app-files:/var/www/html'
             - 'app-storage:/var/www/html/storage/app/public'
+            - './.env:/var/www/html/.env:ro'
         networks:
-            - sail
+            - studyez
         depends_on:
-            - mysql
+            - meusql
+            - redis
 
+    # Serviço para o Nginx, que serve os arquivos estáticos e proxy para o PHP
     nginx:
         image: 'nginx:alpine'
         ports:
             - '8000:80'
         volumes:
-            - 'app-public:/var/www/html/public:ro'
-            - 'app-storage:/var/www/html/storage/app/public:ro'
+            - 'app-files:/var/www/html:ro'
             - './docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf'
         networks:
-            - sail
+            - studyez
         depends_on:
-            - laravel.test
+            - app
+            - websockets
 
-    mysql:
+    # Serviço para WebSockets
+    websockets:
+        image: studyez-app:latest
+        environment:
+            WWWUSER: '1000'
+            LARAVEL_SAIL: 1
+        command: bash -c "sleep 10 && php artisan websockets:serve --host=0.0.0.0 --port=6001"
+        ports:
+            - '6001:6001'
+        volumes:
+            - 'app-files:/var/www/html'
+            - 'app-storage:/var/www/html/storage/app/public'
+            - './.env:/var/www/html/.env'
+        networks:
+            - studyez
+        depends_on:
+            - meusql
+            - redis
+            - app
+
+    # Serviço para o MySQL
+    meusql:
         image: 'mysql:8.0'
         platform: linux/amd64
         environment:
-            MYSQL_ROOT_PASSWORD: 'password'
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
             MYSQL_DATABASE: 'bancostudy'
             MYSQL_ALLOW_EMPTY_PASSWORD: 'no'
         volumes:
-            - 'sail-mysql:/var/lib/mysql'
+            - 'mysql_data:/var/lib/mysql'
         networks:
-            - sail
+            - studyez
 
+    # Serviço para o Redis
     redis:
-        image: 'redis:alpine'
+        image: 'redis:7-alpine'
         volumes:
-            - 'sail-redis:/data'
+            - 'redis_data:/data'
         networks:
-            - sail
+            - studyez
 
+     # Serviço para e-mails de desenvolvimento (Mailpit)
     mailpit:
         image: 'axllent/mailpit:latest'
         ports:
             - '8025:8025'
         networks:
-            - sail
+            - studyez
 
-    websockets:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        image: studyez-app:latest
-        command: php artisan websockets:serve
-        ports:
-            - '6001:6001'
-        networks:
-            - sail
-        depends_on:
-            - laravel.test
-            - redis
-
+# Rede compartilhada entre os serviços
 networks:
-    sail:
+    studyez:
         driver: bridge
 
+# Volumes para persistência de dados
 volumes:
-    sail-mysql:
+    mysql_data:
         driver: local
-    sail-redis:
-        driver: local
-    app-public:
+    redis_data:
         driver: local
     app-storage:
+        driver: local
+    app-files:
         driver: local

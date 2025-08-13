@@ -3,90 +3,90 @@ set -e
 
 echo "🚀 Iniciando StudyEZ..."
 
-# SEMPRE recriar .env baseado no .env.example para Docker
-echo "📋 Recriando .env baseado no .env.example..."
-cp .env.example .env
+# Se o volume estiver vazio, copiar arquivos do build
+if [ ! -f "/var/www/html/artisan" ]; then
+    echo "📦 Copiando arquivos da aplicação para o volume..."
+    cp -r /app/* /var/www/html/
+    chown -R www-data:www-data /var/www/html
+fi
+
+# Verificar se .env existe, senão criar baseado no .env.example
+# if [ ! -f .env ]; then
+#     echo "📋 Criando .env baseado no .env.example..."
+#     cp .env.example .env
+# fi
 
 # Ajustar configurações para Docker
-echo "🔧 Ajustando configurações para Docker..."
+# echo "🔧 Configurando ambiente Docker..."
 
-# Database - manter usuário root, só mudar host e senha
-sed -i 's/DB_HOST=127.0.0.1/DB_HOST=mysql/' .env
-sed -i 's/DB_PASSWORD=root/DB_PASSWORD=password/' .env
+# Database
+# sed -i 's/DB_HOST=.*/DB_HOST=mysql/' .env
+# sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=password/' .env
 
-# App URL para porta 8000
-sed -i 's|APP_URL=http://localhost|APP_URL=http://localhost:8000|' .env
+# # Broadcasting e Pusher/WebSockets
+# sed -i 's/BROADCAST_DRIVER=.*/BROADCAST_DRIVER=pusher/' .env
+# sed -i 's/QUEUE_CONNECTION=.*/QUEUE_CONNECTION=redis/' .env
+# sed -i 's/SESSION_DRIVER=.*/SESSION_DRIVER=redis/' .env
+# sed -i 's/CACHE_DRIVER=.*/CACHE_DRIVER=redis/' .env
 
-# Environment para debug temporário
-sed -i 's/APP_ENV=local/APP_ENV=local/' .env
-sed -i 's/APP_DEBUG=true/APP_DEBUG=true/' .env
+# # Redis
+# sed -i 's/REDIS_HOST=.*/REDIS_HOST=redis/' .env
 
-# Configurar Broadcaster para usar o WebSockets
-sed -i 's/BROADCAST_DRIVER=log/BROADCAST_DRIVER=pusher/' .env
-sed -i 's/QUEUE_CONNECTION=sync/QUEUE_CONNECTION=redis/' .env
-sed -i 's/SESSION_DRIVER=file/SESSION_DRIVER=redis/' .env
+# # Pusher/WebSockets - IMPORTANTE: usar as mesmas chaves
+# sed -i 's/PUSHER_APP_ID=.*/PUSHER_APP_ID=minha-chave-app/' .env
+# sed -i 's/PUSHER_APP_KEY=.*/PUSHER_APP_KEY=minha-chave-app/' .env
+# sed -i 's/PUSHER_APP_SECRET=.*/PUSHER_APP_SECRET=minha-chave-secreta/' .env
+# sed -i 's/PUSHER_HOST=.*/PUSHER_HOST=localhost/' .env
+# sed -i 's/PUSHER_PORT=.*/PUSHER_PORT=6001/' .env
+# sed -i 's/PUSHER_SCHEME=.*/PUSHER_SCHEME=http/' .env
 
-sed -i 's/PUSHER_APP_ID=/PUSHER_APP_ID=minha-chave-app-id/' .env
-sed -i 's/PUSHER_APP_KEY=/PUSHER_APP_KEY=minha-chave-app/' .env
-sed -i 's/PUSHER_APP_SECRET=/PUSHER_APP_SECRET=minha-chave-app-secret/' .env
-sed -i 's/PUSHER_HOST=/PUSHER_HOST=websockets/' .env
-sed -i 's/PUSHER_PORT=443/PUSHER_PORT=6001/' .env
-sed -i 's/PUSHER_SCHEME=https/PUSHER_SCHEME=http/' .env
+# echo "✅ Configurações aplicadas!"
 
-echo "✅ Arquivo .env configurado para Docker!"
-
-# Esperar até que o MySQL esteja pronto
-echo "🔍 Aguardando o MySQL..."
-until nc -z -v -w30 mysql 3306
-do
-  echo "⚠️ MySQL não está pronto. Aguardando..."
-  sleep 5
+# Aguardar serviços
+echo "🔍 Aguardando MySQL..."
+DATABASE_HOST=$(grep DB_HOST .env | cut -d '=' -f2)
+DATABASE_PORT=$(grep DB_PORT .env | cut -d '=' -f2)
+until nc -z -v -w30 $DATABASE_HOST $DATABASE_PORT; do
+    echo "⚠️ MySQL não está pronto. Aguardando..."
+    sleep 5
 done
-echo "✅ MySQL está pronto!"
 
-# Configurar aplicação
+echo "🔍 Aguardando Redis..."
+REDIS_HOST=$(grep REDIS_HOST .env | cut -d '=' -f2)
+REDIS_PORT=$(grep REDIS_PORT .env | cut -d '=' -f2)
+until nc -z -v -w30 $REDIS_HOST $REDIS_PORT; do
+    echo "⚠️ Redis não está pronto. Aguardando..."
+    sleep 5
+done
+
+# echo "✅ Serviços prontos!"
+
 echo "🔑 Configurando Laravel..."
 
-# Gerar nova APP_KEY
-echo "Gerando nova APP_KEY..."
-php artisan key:generate --force --no-interaction
+# Gerar APP_KEY se não existir
+# if ! grep -q "APP_KEY=base64:" .env; then
+#     php artisan key:generate 
+# fi
 
 # Limpar caches
-echo "🧹 Limpando caches..."
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
 php artisan cache:clear
+php artisan optimize:clear
 
-# Storage link ANTES de copiar arquivos
-echo "🔗 Criando storage link..."
-php artisan storage:link --force 2>/dev/null || true
+# Storage link
+php artisan storage:link || true
 
-# Copiar arquivos públicos para o volume compartilhado (incluindo build E storage)
-echo "📁 Sincronizando arquivos públicos..."
-if [ -d "/var/www/html/public/build" ]; then
-    cp -r /var/www/html/public/* /var/www/html/public/ 2>/dev/null || true
-    echo "✅ Arquivos de build copiados!"
-else
-    echo "⚠️ Pasta build não encontrada"
-fi
-
-# Garantir que o link do storage existe no volume compartilhado
-if [ -L "/var/www/html/public/storage" ]; then
-    echo "🔗 Link do storage já existe!"
-else
-    echo "🔗 Criando link do storage no volume..."
-    ln -sf /var/www/html/storage/app/public /var/www/html/public/storage
-fi
-
-# Executando migrations - agora usando root com senha password
+# Migrations
 echo "🗃️ Executando migrations..."
-php artisan migrate --force --no-interaction
+php artisan migrate || true
 
-# Permissões - incluir storage/app/public
-echo "🔧 Ajustando permissões..."
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
+# Configurar permissões finais
+chown -R www-data:www-data storage bootstrap/cache || true
+chmod -R 775 storage bootstrap/cache || true
 
-echo "✅ StudyEZ configurado! Iniciando PHP-FPM..."
-exec php-fpm
+echo "✅ StudyEZ configurado com sucesso!"
+
+# Executar comando passado como argumento
+exec "$@"
