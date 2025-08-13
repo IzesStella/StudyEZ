@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
+use App\Models\Post;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
@@ -13,32 +16,39 @@ class CommentController extends Controller
     }
 
     /**
-     * Criar comentário (só aluno ou monitor).
-     * O post_id agora é recebido da URL.
+     * Criar comentário.
      */
-    public function store(Request $request, $postId)
+    public function store(Request $request, Post $post)
     {
         $this->authorize('create', Comment::class);
 
-        $data = $request->validate([
-            'content' => 'required|string',
-        ]);
+        $request->validate(['content' => 'required|string']);
 
-        $comment = Comment::create([
-            'user_id'   => $request->user()->id,
-            'post_id'   => $postId,
-            'content'   => $data['content'],
-            'parent_id' => null,
+        $comment = $post->comments()->create([
+            'user_id' => Auth::id(),
+            'content' => $request->input('content'),
         ]);
-
-        // Carrega o relacionamento 'user' no comentário recém-criado
-        $comment->load('user'); // <-- ADICIONADO: Carrega os dados do usuário
 
         return response()->json($comment, 201);
     }
 
     /**
-     * Responder comentário (só aluno).
+     * Atualizar comentário.
+     * - O $comment agora é injetado diretamente pela rota.
+     */
+    public function update(Request $request, Post $post, Comment $comment)
+    {
+        $this->authorize('update', $comment);
+
+        $request->validate(['content' => 'required|string']);
+
+        $comment->update(['content' => $request->input('content')]);
+
+        return response()->json($comment);
+    }
+
+    /**
+     * Responder comentário.
      */
     public function reply(Request $request, $commentId)
     {
@@ -48,38 +58,36 @@ class CommentController extends Controller
         $data = $request->validate(['content' => 'required|string']);
 
         $reply = Comment::create([
-            'user_id'   => $request->user()->id,
-            'post_id'   => $parent->post_id,
-            'content'   => $data['content'],
+            'user_id' => $request->user()->id,
+            'post_id' => $parent->post_id,
+            'content' => $data['content'],
             'parent_id' => $parent->id,
         ]);
 
-        // Carrega o relacionamento 'user' na resposta recém-criada
-        $reply->load('user'); // <-- ADICIONADO: Carrega os dados do usuário
+        $reply->load('user');
 
         return response()->json($reply, 201);
     }
-
+    
     /**
-     * Deletar comentário (só autor aluno).
+     * Deletar comentário.
      */
-    public function destroy($id)
+    public function destroy(Post $post, Comment $comment)
     {
-        $comment = Comment::findOrFail($id);
-
         $this->authorize('delete', $comment);
 
         $comment->delete();
-        return response()->json(['message' => 'Comentário deletado com sucesso.'], 200);
+
+        return redirect()->route('community.page', ['id' => $post->community->id])
+            ->with('success', 'Comentário excluído com sucesso!');
     }
 
     /**
-     * Listar thread de comentários (público).
+     * Listar thread de comentários.
      */
-    public function showThread($postId)
+    public function showThread(Post $post)
     {
-        $comments = Comment::with('replies.user')
-            ->where('post_id', $postId)
+        $comments = $post->comments()->with('replies.user')
             ->whereNull('parent_id')
             ->orderBy('created_at', 'asc')
             ->get();

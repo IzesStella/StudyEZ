@@ -10,23 +10,22 @@ class PostController extends Controller
 {
     public function __construct()
     {
-        // obriga estar logado em todas as ações deste controller
         $this->middleware('auth');
     }
 
     /**
-     * Listar todos os posts de uma comunidade (público).
+     * Listar todos os posts de uma comunidade.
+     * Corrigido para usar Route Model Binding na comunidade.
      */
-    public function index($communityId)
+    public function index(Community $community)
     {
-        $community = Community::findOrFail($communityId);
         $posts = $community->posts()->with('user')->latest()->get();
-
         return response()->json($posts);
     }
 
     /**
-     * Mostrar um post específico (público).
+     * Mostrar um post específico.
+     * Rota show não é aninhada, então não precisa do parâmetro Community.
      */
     public function show($id)
     {
@@ -35,60 +34,71 @@ class PostController extends Controller
     }
 
     /**
-     * Criar novo post:
-     * - Alunos podem em qualquer comunidade.
-     * - Monitores apenas nas próprias.
+     * Criar novo post.
+     * Corrigido para receber o community_id do corpo da requisição.
+     * Isso evita o erro de 'community_id cannot be null' quando o Route Model Binding falha.
      */
-   public function store(Request $request, Community $community)
-{
-    $data = $request->validate([
-        'title'      => 'required|string|max:255',
-        'content'    => 'nullable|string',
-        'image_path' => 'nullable|url',
-    ]);
-    
-    $this->authorize('create', [Post::class, $community]);
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string',
+            'image_path' => 'nullable|url',
+            // Adicionado community_id para validação
+            'community_id' => 'required|exists:communities,id'
+        ]);
+        
+        $community = Community::findOrFail($data['community_id']);
+        
+        $this->authorize('create', [Post::class, $community]);
 
-    $post = new Post($data);
-    $post->user_id = $request->user()->id;
-    $post->community_id = $community->id;
-    $post->save();
+        $post = new Post($data);
+        $post->user_id = $request->user()->id;
+        $post->save();
 
-    // SOLUÇÃO: Redirecione de volta para a página da comunidade
-    return redirect()->route('community.page', $community->id)
-                     ->with('success', 'Post criado com sucesso!');
-}
+        return redirect()->route('community.page', $community->id)
+                         ->with('success', 'Post criado com sucesso!');
+    }
 
     /**
-     * Atualizar post (só monitor dono da comunidade).
+     * Atualizar post.
+     * Esta função já estava correta, recebendo ambos os modelos.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Community $community, Post $post)
     {
-        $post = Post::findOrFail($id);
-
+        // O Laravel já injeta as instâncias de Community e Post
+        // com base nos IDs da URL da rota aninhada.
+        
         $this->authorize('update', $post);
 
         $data = $request->validate([
-            'title'      => 'sometimes|string|max:255',
-            'content'    => 'nullable|string',
+            'title' => 'sometimes|string|max:255',
+            'content' => 'nullable|string',
             'image_path' => 'nullable|url',
         ]);
 
         $post->update($data);
 
-        return response()->json($post);
+        return redirect()->route('community.page', $community->id)
+                         ->with('success', 'Post atualizado com sucesso!');
     }
 
     /**
-     * Deletar post (só monitor dono da comunidade).
+     * Deletar post.
+     * Corrigido para usar Route Model Binding em Community e Post.
+     * A rota DELETE /communities/{community}/posts/{post} espera ambos os modelos.
      */
-    public function destroy($id)
+    public function destroy(Community $community, Post $post)
     {
-        $post = Post::findOrFail($id);
-
+        // O Laravel já injeta as instâncias de Community e Post.
+        // A comunidade é o primeiro parâmetro, o post é o segundo.
+        
         $this->authorize('delete', $post);
 
         $post->delete();
-        return response()->json(['message' => 'Post deletado com sucesso.'], 200);
+        
+        // Redireciona usando a instância da comunidade injetada.
+        return redirect()->route('community.page', $community->id)
+                         ->with('success', 'Post deletado com sucesso!');
     }
 }

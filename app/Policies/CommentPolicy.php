@@ -23,12 +23,12 @@ class CommentPolicy
 
     /**
      * Atualização de comentário:
-     * só o próprio autor (aluno) pode editar.
+     * só o próprio autor pode editar, independentemente do seu papel.
      */
     public function update(User $user, Comment $comment): bool
     {
-        return $user->role === 'student'
-            && $comment->user_id === $user->id;
+        // Apenas verifica se o ID do usuário logado é o mesmo que o ID do criador do comentário.
+        return $comment->user_id === $user->id;
     }
 
     /**
@@ -37,6 +37,12 @@ class CommentPolicy
      */
     public function delete(User $user, Comment $comment): bool
     {
-        return $this->update($user, $comment);
+        // Reutiliza a mesma lógica de atualização para exclusão.
+        // A lógica original permitia apenas alunos deletarem,
+        // mas a nova lógica permite que o dono do comentário o exclua.
+        // Se a intenção era restringir a exclusão a alunos, o código deve ser:
+        // return $user->role === 'student' && $comment->user_id === $user->id;
+        // Para manter a consistência, estou atualizando para a lógica do `update`
+        return $comment->user_id === $user->id;
     }
 }

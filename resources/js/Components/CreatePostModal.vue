@@ -2,7 +2,7 @@
   <div class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Criar Novo Post</h2>
+        <h2>{{ postToEdit ? 'Editar Post' : 'Criar Novo Post' }}</h2>
       </div>
       <form @submit.prevent="submit">
         <div class="modal-body">
@@ -27,12 +27,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button
-            type="submit"
-            class="btn-postar"
-            :disabled="form.processing"
-          >
-            Postar
+          <button type="submit" class="btn-postar" :disabled="form.processing">
+            {{ postToEdit ? 'Salvar' : 'Postar' }}
           </button>
           <button type="button" @click="$emit('close')" class="btn-cancelar">
             Cancelar
@@ -45,27 +41,57 @@
 
 <script setup>
 import { useForm } from '@inertiajs/vue3';
+import { defineProps, defineEmits, watch } from 'vue';
 
 const props = defineProps({
   community: { type: Object, required: true },
+  postToEdit: {
+    type: Object,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['close']);
 
 const form = useForm({
-  title: '',
-  content: '',
+  title: props.postToEdit ? props.postToEdit.title : '',
+  content: props.postToEdit ? props.postToEdit.content : '',
   community_id: props.community.id,
 });
 
+watch(() => props.postToEdit, (newPost) => {
+  if (newPost) {
+    form.title = newPost.title;
+    form.content = newPost.content;
+  } else {
+    form.title = '';
+    form.content = '';
+  }
+});
+
 function submit() {
-  form.post(route('posts.store', { community: props.community.id }), {
-    onSuccess: () => {
-      form.reset(); // Limpa o formulário
-      emit('close'); // Fecha o modal
-    },
-    preserveScroll: true,
-  });
+  if (props.postToEdit) {
+    // Chamada de rota corrigida para incluir o ID da comunidade e do post
+    form.put(route('communities.posts.update', {
+      community: props.community.id,
+      post: props.postToEdit.id
+    }), {
+      onSuccess: () => {
+        form.reset();
+        emit('close');
+      },
+      preserveScroll: true,
+    });
+  } else {
+    // Rota corrigida para usar 'posts.store', que não é aninhada
+    form.post(route('posts.store'), {
+      onSuccess: () => {
+        form.reset();
+        emit('close');
+      },
+      preserveScroll: true,
+    });
+  }
 }
 </script>
 
@@ -79,7 +105,6 @@ function submit() {
   justify-content: center;
   background: rgba(0, 0, 0, 0.3);
 }
-
 .modal-content {
   background: #fff;
   border-radius: 18px;
@@ -89,7 +114,6 @@ function submit() {
   width: 100%;
   position: relative;
 }
-
 .modal-header {
   background: #b5d6fa;
   border-radius: 16px 16px 0 0;
@@ -97,7 +121,6 @@ function submit() {
   padding: 18px 0 14px 0;
   text-align: center;
 }
-
 .modal-header h2 {
   color: #153a6b;
   font-size: 2rem;
@@ -105,30 +128,25 @@ function submit() {
   margin: 0;
   font-family: 'Inter', sans-serif;
 }
-
 .modal-body {
   display: flex;
   flex-direction: column;
   margin-bottom: 32px;
 }
-
 .modal-col {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-
 .full-width {
   width: 100%;
 }
-
 .modal-col label {
   font-weight: 600;
   color: #153a6b;
   font-size: 1rem;
   font-family: 'Inter', sans-serif;
 }
-
 .text-input {
   border: 1.5px solid #153a6b;
   border-radius: 10px;
@@ -139,13 +157,11 @@ function submit() {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .text-input:focus {
   outline: none;
   border-color: #ff9500;
   box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
 }
-
 .message-textarea {
   border: 1.5px solid #153a6b;
   border-radius: 10px;
@@ -158,20 +174,17 @@ function submit() {
   min-height: 180px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .message-textarea:focus {
   outline: none;
   border-color: #ff9500;
   box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
 }
-
 .modal-footer {
   display: flex;
   justify-content: center;
   gap: 24px;
   margin-top: 12px;
 }
-
 .btn-postar {
   background: #b5d6fa;
   color: #111;
@@ -183,11 +196,9 @@ function submit() {
   cursor: pointer;
   transition: background 0.2s;
 }
-
 .btn-postar:hover {
   background: #8fc3fa;
 }
-
 .btn-cancelar {
   background: #ff9500;
   color: #111;
@@ -199,7 +210,6 @@ function submit() {
   cursor: pointer;
   transition: background 0.2s;
 }
-
 .btn-cancelar:hover {
   background: #e07d00;
 }

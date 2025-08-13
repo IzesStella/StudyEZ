@@ -17,6 +17,11 @@ use Illuminate\Support\Facades\Broadcast;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
 */
 
 // Rotas para convidados (guest)
@@ -65,14 +70,14 @@ Route::middleware('auth')->group(function () {
     // ➤  rotas do Planner
     //
     Route::get('/planner', [PlannerController::class, 'show'])
-    ->name('planner.show');
+        ->name('planner.show');
     Route::post('/planner', [PlannerController::class, 'store'])
-    ->name('planner.store');
+        ->name('planner.store');
 
     //
     // 3) Comunidades: buscar, explorar, ver, criar (monitor)
     //
-    Route::get('/search',      [CommunityController::class, 'search'])
+    Route::get('/search', [CommunityController::class, 'search'])
         ->name('search');
     Route::get('/communities', [CommunityController::class, 'explore'])
         ->name('communities.explore');
@@ -83,47 +88,50 @@ Route::middleware('auth')->group(function () {
     Route::post('/communities', [CommunityController::class, 'store'])
         ->name('communities.store');
 
-    // Rota para criar um novo post
-    Route::post('/communities/{community}/posts', [PostController::class, 'store'])
-        ->name('posts.store');
-
-    // Rotas do Chat
+    // 4) Rotas de CRUD de Comunidades (Adicionadas para o erro anterior)
+    Route::put('/communities/{id}', [CommunityController::class, 'update'])->name('communities.update');
+    Route::delete('/communities/{id}', [CommunityController::class, 'destroy'])->name('communities.destroy');
+    
+    //
+    // ➤ Rotas do Chat
+    //
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::get('/chat/{chat}', [ChatController::class, 'show'])->name('chat.show');
     Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.store');
     // Rota para iniciar ou abrir um chat com um monitor
     Route::post('/chat/start/{monitor}', [ChatController::class, 'startChat'])
-    ->name('chat.start');
+        ->name('chat.start');
     
     //
-    // 4) Inscrição e cancelamento (aluno apenas)
+    // 5) Inscrição e cancelamento (aluno apenas)
     //
-    Route::post('/communities/{id}/subscribe',   [CommunityController::class, 'subscribe'])
+    Route::post('/communities/{id}/subscribe', [CommunityController::class, 'subscribe'])
         ->name('communities.subscribe');
     Route::delete('/communities/{id}/unsubscribe',[CommunityController::class, 'unsubscribe'])
         ->name('communities.unsubscribe');
     
-    // Rota para listar os comentários de um post específico
-    Route::get('/posts/{postId}/comments', [CommentController::class, 'showThread'])
-        ->name('comments.showThread');
-
-    // Rota para criar um novo comentário para um post
-    Route::post('/posts/{postId}/comments', [CommentController::class, 'store'])
-        ->name('comments.store');
-    
-    // 5) Perfil e logout
     //
-    Route::get('/profile',       [ProfileController::class, 'show'])
+    // ➤ Rotas de CRUD de Posts e Comentários (reorganizado e corrigido)
+    //
+    // As rotas de recurso aninhadas já geram as URLs corretas para criar,
+    // ler, atualizar e deletar. O erro estava na chamada do front-end.
+    Route::resource('communities.posts', PostController::class)->except(['create', 'edit']);
+    Route::resource('posts.comments', CommentController::class)->except(['create', 'edit']);
+    
+    //
+    // 6) Perfil e logout
+    //
+    Route::get('/profile', [ProfileController::class, 'show'])
         ->name('profile.show');
-    Route::get('/profile/edit',    [ProfileController::class, 'edit'])
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])
         ->name('profile.edit');
     Route::get('/profile/{user}', [ProfileController::class, 'showUser'])
         ->name('profile.user');
-    Route::patch('/profile',      [ProfileController::class, 'update'])
+    Route::patch('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])
         ->name('profile.avatar');
-    Route::delete('/profile',      [ProfileController::class, 'destroy'])
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])

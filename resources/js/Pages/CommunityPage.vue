@@ -9,15 +9,18 @@
 
     <CreatePostModal
       v-if="showCreatePostModal"
-      @close="showCreatePostModal = false"
+      @close="closePostModal"
       :community="community"
+      :post-to-edit="postToEdit"
     />
 
     <CommentModal
       v-if="showCommentModal"
-      @close="showCommentModal = false"
+      @close="closeCommentModal"
       @comment-added="handleCommentAdded"
+      @comment-updated="handleCommentUpdated"
       :post="selectedPostForComment"
+      :comment-to-edit="commentToEdit"
     />
 
     <div
@@ -43,7 +46,7 @@
         >
           Desinscrever-se
         </button>
-        
+
         <button
           v-if="user && isStudent && isSubscribed"
           @click="startChat"
@@ -54,7 +57,7 @@
 
         <button
           v-if="user && (isStudent || (user.role === 'monitor' && user.id === community.creator.id))"
-          @click="handlePostClick"
+          @click="openCreatePostModal()"
           class="btn-action"
         >
           + Postar
@@ -68,9 +71,9 @@
     <div v-else v-for="post in localPosts" :key="post.id" :id="`post-${post.id}`" class="post-card border-b border-gray-200 pb-6 mb-6">
       <div class="flex items-center mb-2">
         <template v-if="post.user.profile_photo">
-          <img 
-            :src="`/storage/${post.user.profile_photo}`" 
-            :alt="post.user.name" 
+          <img
+            :src="`/storage/${post.user.profile_photo}`"
+            :alt="post.user.name"
             class="w-10 h-10 rounded-full object-cover border-2 cursor-pointer hover:opacity-80 transition"
             :class="post.user.role === 'monitor' ? 'border-yellow-500' : 'border-orange-500'"
             @click="goToProfile(post.user.id)"
@@ -98,34 +101,46 @@
               </svg>
             </span>
           </p>
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-gray-500 flex items-center">
             {{ new Date(post.created_at).toLocaleString() }}
+            <span v-if="post.created_at !== post.updated_at" class="ml-2 text-xs text-gray-400">(editado)</span>
           </p>
         </div>
       </div>
       <h2 class="text-xl font-semibold mb-2">{{ post.title }}</h2>
       <p class="text-gray-700 mb-4">{{ post.content }}</p>
-      
-      <button
-        @click="openCommentModal(post)"
-        class="flex items-center text-gray-500 hover:text-gray-700 transition"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6 mr-1"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+
+      <div class="flex items-center space-x-4 mb-2">
+        <button
+          @click="openCommentModal(post)"
+          class="flex items-center text-gray-500 hover:text-gray-700 transition"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8-1.446 0-2.813-.253-4.033-.707L3 20l1.293-4.657C3.253 14.813 3 13.446 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
-        <span>Comentários ({{ post.comments ? post.comments.length : 0 }})</span>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8-1.446 0-2.813-.253-4.033-.707L3 20l1.293-4.657C3.253 14.813 3 13.446 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+          <span>Comentários ({{ post.comments ? post.comments.length : 0 }})</span>
+        </button>
+
+        <template v-if="canEditPost(post)">
+          <button @click="openCreatePostModal(post)" class="text-blue-500 hover:text-blue-700 transition">
+            Editar
+          </button>
+          <button @click="deletePost(post)" class="text-red-500 hover:text-red-700 transition">
+            Excluir
+          </button>
+        </template>
+      </div>
 
       <div v-if="post.comments && post.comments.length > 0" class="comments-section mt-6">
         <div class="comments-header">
@@ -135,9 +150,9 @@
           <div v-for="comment in post.comments" :key="comment.id" class="comment-item">
             <div class="comment-avatar-container">
               <template v-if="comment.user.profile_photo">
-                <img 
-                  :src="`/storage/${comment.user.profile_photo}`" 
-                  :alt="comment.user.name" 
+                <img
+                  :src="`/storage/${comment.user.profile_photo}`"
+                  :alt="comment.user.name"
                   class="comment-avatar-image cursor-pointer hover:opacity-80 transition"
                   @click="goToProfile(comment.user.id)"
                 />
@@ -154,7 +169,7 @@
             </div>
             <div class="comment-content">
               <div class="comment-header">
-                <p 
+                <p
                   class="comment-author cursor-pointer hover:underline transition"
                   :class="comment.user.role === 'monitor' ? 'text-yellow-600 font-semibold' : 'text-gray-800 font-semibold'"
                   @click="goToProfile(comment.user.id)"
@@ -166,9 +181,21 @@
                     </svg>
                   </span>
                 </p>
-                <span class="comment-date">{{ new Date(comment.created_at).toLocaleString() }}</span>
+                <span class="comment-date flex items-center">
+                  {{ new Date(comment.created_at).toLocaleString() }}
+                  <span v-if="comment.created_at !== comment.updated_at" class="ml-2 text-xs text-gray-400">(editado)</span>
+                </span>
               </div>
               <p class="comment-text">{{ comment.content }}</p>
+
+              <div v-if="canEditComment(comment)" class="mt-2 flex space-x-2">
+                <button @click="openCommentModal(post, comment)" class="text-blue-500 hover:text-blue-700 text-sm transition">
+                  Editar
+                </button>
+                <button @click="deleteComment(post, comment)" class="text-red-500 hover:text-red-700 text-sm transition">
+                  Excluir
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -197,6 +224,17 @@ const props = defineProps({
   posts: { type: Array, required: true, default: () => [] },
 })
 
+const page = usePage();
+
+// Estado para controle dos modais e itens a serem editados
+const showCreateCommunity = ref(false)
+const showWarningModal = ref(false)
+const showCreatePostModal = ref(false)
+const showCommentModal = ref(false)
+const selectedPostForComment = ref(null)
+const postToEdit = ref(null)
+const commentToEdit = ref(null)
+
 // Funcionalidade de scroll automático para posts específicos
 onMounted(() => {
   nextTick(() => {
@@ -220,15 +258,46 @@ watch(() => props.posts, newPosts => {
   localPosts.value = [...newPosts]
 }, { deep: true, immediate: true })
 
-const showCommentModal = ref(false)
-const selectedPostForComment = ref(null)
-
 const sidebarComponent = props.user?.role === 'monitor' ? SideBarMonitor : SideBar
-const showCreateCommunity = ref(false)
 const isStudent = props.user?.role === 'student'
-const showCreatePostModal = ref(false)
-const showWarningModal = ref(false)
 
+// Lógica para verificar permissões de edição/exclusão
+const canEditPost = (post) => {
+  return page.props.auth.user && post.user_id === page.props.auth.user.id;
+}
+const canEditComment = (comment) => {
+  return page.props.auth.user && comment.user_id === page.props.auth.user.id;
+}
+
+// Métodos para controle dos modais
+function openCreatePostModal(post = null) {
+  if (props.user.role === 'student' && !props.isSubscribed) {
+    showWarningModal.value = true;
+    return;
+  }
+  postToEdit.value = post;
+  showCreatePostModal.value = true;
+}
+
+function closePostModal() {
+  postToEdit.value = null;
+  showCreatePostModal.value = false;
+  // A recarga já é tratada pelo Inertia no redirect do backend
+}
+
+function openCommentModal(post, comment = null) {
+  selectedPostForComment.value = post;
+  commentToEdit.value = comment;
+  showCommentModal.value = true;
+}
+
+function closeCommentModal() {
+  selectedPostForComment.value = null;
+  commentToEdit.value = null;
+  showCommentModal.value = false;
+}
+
+// Métodos para CRUD
 function subscribe() {
   router.post(`/communities/${props.community.id}/subscribe`, {}, { preserveScroll: true })
 }
@@ -238,6 +307,42 @@ function unsubscribe() {
 function goToProfile(userId) {
   router.get(`/profile/${userId}`)
 }
+
+// FUNÇÃO deletePost CORRIGIDA
+function deletePost(post) {
+  if (confirm('Tem certeza que deseja excluir este post?')) {
+    // A rota correta é 'communities.posts.destroy' e ela precisa
+    // do ID da comunidade e do ID do post.
+    router.delete(route('communities.posts.destroy', {
+      community: props.community.id,
+      post: post.id
+    }), {
+      onSuccess: () => {
+        // Inertia.js lida com a mensagem flash e o recarregamento.
+      },
+      preserveScroll: true
+    });
+  }
+}
+
+// Função deleteComment atualizada para receber post e comment
+function deleteComment(post, comment) {
+  if (confirm('Tem certeza que deseja excluir este comentário?')) {
+    // A rota correta agora é 'posts.comments.destroy'
+    // E ela precisa de dois parâmetros: o ID do post e o ID do comentário.
+    router.delete(route('posts.comments.destroy', {
+      post: post.id,
+      comment: comment.id,
+    }), {
+      onSuccess: () => {
+        // O redirect do backend já vai recarregar a página e mostrar a mensagem flash.
+        // Não é necessário remover o comentário localmente aqui.
+      },
+      preserveScroll: true
+    });
+  }
+}
+
 function handlePostClick() {
   if (props.user.role === 'student' && !props.isSubscribed) {
     showWarningModal.value = true
@@ -245,233 +350,236 @@ function handlePostClick() {
     showCreatePostModal.value = true
   }
 }
-function openCommentModal(post) {
-  selectedPostForComment.value = post
-  showCommentModal.value = true
+
+function handleCommentAdded() {
+  // Chamadas API/AJAX não usam Inertia, então recarregamos explicitamente.
+  router.reload({ only: ['posts'], preserveScroll: true });
+  showCommentModal.value = false;
 }
 
-// A função handleCommentAdded corrigida para usar Inertia.js
-function handleCommentAdded() {
-  router.reload({ only: ['posts'], preserveScroll: true })
-  showCommentModal.value = false
+function handleCommentUpdated() {
+  // Chamadas API/AJAX não usam Inertia, então recarregamos explicitamente.
+  router.reload({ only: ['posts'], preserveScroll: true });
+  showCommentModal.value = false;
 }
 
 function startChat() {
-    router.post(`/chat/start/${props.community.creator.id}`, {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            // O redirecionamento será feito automaticamente pelo backend
-        }
-    });
+  router.post(`/chat/start/${props.community.creator.id}`, {}, {
+    preserveScroll: true,
+    onSuccess: () => {
+      // O redirecionamento será feito automaticamente pelo backend
+    }
+  });
 }
 </script>
 
 <style scoped>
+/* SEU CSS AQUI */
 .community-header {
-    background: #1e3a8a; 
+  background: #1e3a8a;
 }
 
 .button-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    align-items: center; /* Alinha os botões verticalmente no centro */
-    justify-content: flex-end; /* Alinha os botões à direita */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  align-items: center; /* Alinha os botões verticalmente no centro */
+  justify-content: flex-end; /* Alinha os botões à direita */
 }
 @media (min-width: 768px) {
-    .button-group {
-        margin-top: 0;
-        margin-left: 1.5rem; /* Adiciona um espaço à esquerda em telas maiores */
-    }
+  .button-group {
+    margin-top: 0;
+    margin-left: 1.5rem; /* Adiciona um espaço à esquerda em telas maiores */
+  }
 }
 
 .btn-unsubscribe {
-    background-color: #dc2626; 
-    color: white;
-    font-weight: 600;
-    padding: 0.5rem 1.25rem;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease-in-out;
+  background-color: #dc2626;
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
 }
 .btn-unsubscribe:hover {
-    background-color: #b91c1c; 
+  background-color: #b91c1c;
 }
 
 .btn-action {
-    background-color: #2563eb; 
-    color: white;
-    font-weight: 600;
-    padding: 0.5rem 1.25rem;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease-in-out;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
 }
 .btn-action:hover {
-    background-color: #1d4ed8; 
+  background-color: #1d4ed8;
 }
 
 .btn-subscribe {
-    background-color: white;
-    color: #1e3a8a;
-    font-weight: 600;
-    padding: 0.5rem 1.25rem;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease-in-out;
+  background-color: white;
+  color: #1e3a8a;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
 }
 .btn-subscribe:hover {
-    background-color: #f3f4f6;
+  background-color: #f3f4f6;
 }
 
 /* Os posts individuais agora são itens dentro do container */
 .post-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .avatar-monitor {
-    background-color: #f59e0b; 
+  background-color: #f59e0b;
 }
 .avatar-student {
-    background-color: #ea580c;
+  background-color: #ea580c;
 }
 
 /* Nova seção de comentários */
 .comments-section {
-    border-top: 1px solid #e5e7eb;
-    padding-top: 1.5rem;
-    margin-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
 }
 
 .comments-header {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .comments-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #374151;
-    font-family: 'Montserrat', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .comments-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .comment-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem;
-    background-color: #f9fafb;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    transition: all 0.2s ease;
-    background-color: #e7f4ff;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  background-color: #e7f4ff;
 }
 
 .comment-item:hover {
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
 }
 
 .comment-avatar-container {
-    flex-shrink: 0;
+  flex-shrink: 0;
 }
 
 .comment-avatar-image {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #e5e7eb;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
 }
 
 .comment-avatar-fallback {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 1rem;
-    border: 2px solid #e5e7eb;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  border: 2px solid #e5e7eb;
 }
 
 .comment-content {
-    flex: 1;
-    min-width: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .comment-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .comment-author {
-    font-size: 0.9rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .monitor-badge {
-    display: inline-flex;
-    align-items: center;
+  display: inline-flex;
+  align-items: center;
 }
 
 .comment-date {
-    font-size: 0.75rem;
-    color: #6b7280;
-    font-weight: 500;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .comment-text {
-    font-size: 0.9rem;
-    color: #374151;
-    line-height: 1.5;
-    word-wrap: break-word;
-    font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  color: #374151;
+  line-height: 1.5;
+  word-wrap: break-word;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Responsividade para comentários */
 @media (max-width: 640px) {
-    .comment-item {
-        padding: 0.75rem;
-        gap: 0.5rem;
-    }
-    
-    .comment-avatar-image,
-    .comment-avatar-fallback {
-        width: 2rem;
-        height: 2rem;
-        font-size: 0.875rem;
-    }
-    
-    .comment-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
-    }
+  .comment-item {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .comment-avatar-image,
+  .comment-avatar-fallback {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.875rem;
+  }
+
+  .comment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
 }
 
 /* Destaque para posts navegados */
 .highlighted-post {
-    background-color: #fef3c7;
-    border: 2px solid #f59e0b;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+  background-color: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 </style>
